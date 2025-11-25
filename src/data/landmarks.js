@@ -5,7 +5,7 @@ export const landmarks = [
     modelUri: '/model/monas.glb',
     latitude: -7,
     longitude: 106.8456,
-    scale: 0.03,
+    scale: 0.02,
     zIndex: 0,
     yOffset: 0.11
   },
@@ -15,7 +15,7 @@ export const landmarks = [
     modelUri: '/model/monas.glb',
     latitude: -8,
     longitude: 111.5,
-    scale: 0.03,
+    scale: 0.02,
     zIndex: 0,
     yOffset: 0.13
   }
