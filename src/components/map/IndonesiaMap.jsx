@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useGLTF } from "@react-three/drei";
 import { Box3 } from "three";
+import { INDONESIA_MAP_ROTATION, INDONESIA_MAP_SCALE } from "../const";
 
 useGLTF.preload("/model/indonesia.glb");
 
@@ -9,8 +10,12 @@ function IndonesiaMap({ onBoundsReady }) {
   const { scene } = useGLTF("/model/indonesia.glb");
   const clonedScene = useMemo(() => {
     const cloned = scene.clone(true);
-    cloned.rotation.set(-Math.PI / 2, 0, 0);
-    cloned.scale.set(60, 60, 60);
+    cloned.rotation.set(...INDONESIA_MAP_ROTATION);
+    cloned.scale.set(
+      INDONESIA_MAP_SCALE,
+      INDONESIA_MAP_SCALE,
+      INDONESIA_MAP_SCALE
+    );
     return cloned;
   }, [scene]);
 

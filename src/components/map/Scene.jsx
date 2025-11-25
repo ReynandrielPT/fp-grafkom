@@ -1,22 +1,27 @@
-import { Suspense, useEffect, useRef, useState } from 'react'
-import { OrbitControls } from '@react-three/drei'
-import { useGLTF } from '@react-three/drei'
-import IndonesiaMap from './IndonesiaMap'
-import LandmarkMarker from './LandmarkMarker'
-import ControlsTarget from './ControlsTarget'
+import { Suspense, useEffect, useRef, useState } from "react";
+import { OrbitControls } from "@react-three/drei";
+import { useGLTF } from "@react-three/drei";
+import {
+  ORBIT_MIN_DISTANCE,
+  ORBIT_MAX_DISTANCE,
+  ORBIT_DAMPING_FACTOR,
+} from "../const";
+import IndonesiaMap from "./IndonesiaMap";
+import LandmarkMarker from "./LandmarkMarker";
+import ControlsTarget from "./ControlsTarget";
 
 function Scene({ landmarks, onLandmarkSelect }) {
-  const [mapBounds, setMapBounds] = useState(null)
-  const controlsRef = useRef()
-  const activeLandmarks = Array.isArray(landmarks) ? landmarks : []
+  const [mapBounds, setMapBounds] = useState(null);
+  const controlsRef = useRef();
+  const activeLandmarks = Array.isArray(landmarks) ? landmarks : [];
 
   useEffect(() => {
     activeLandmarks.forEach((landmark) => {
       if (landmark?.modelUri) {
-        useGLTF.preload(landmark.modelUri)
+        useGLTF.preload(landmark.modelUri);
       }
-    })
-  }, [activeLandmarks])
+    });
+  }, [activeLandmarks]);
 
   return (
     <>
@@ -41,13 +46,13 @@ function Scene({ landmarks, onLandmarkSelect }) {
         ref={controlsRef}
         enableDamping
         enablePan
-        dampingFactor={0.08}
-        minDistance={2.5}
-        maxDistance={25}
+        dampingFactor={ORBIT_DAMPING_FACTOR}
+        minDistance={ORBIT_MIN_DISTANCE}
+        maxDistance={ORBIT_MAX_DISTANCE}
       />
       <ControlsTarget mapBounds={mapBounds} controlsRef={controlsRef} />
     </>
-  )
+  );
 }
 
-export default Scene
+export default Scene;

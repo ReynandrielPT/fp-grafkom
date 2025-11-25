@@ -1,5 +1,10 @@
 import { Canvas } from "@react-three/fiber";
 import Scene from "./Scene";
+import {
+  DEFAULT_LANDMARKS_SCALE,
+  INDONESIA_CAMERA_POSITION,
+  INDONESIA_CAMERA_FOV,
+} from "../const";
 
 const DEFAULT_LANDMARKS = [
   {
@@ -8,7 +13,7 @@ const DEFAULT_LANDMARKS = [
     modelUri: "/model/monas.glb",
     latitude: -6.2088,
     longitude: 106.8456,
-    scale: 0.05,
+    scale: DEFAULT_LANDMARKS_SCALE,
     zIndex: 0,
   },
 ];
@@ -22,7 +27,12 @@ function IndonesiaCanvas({
 
   return (
     <div className={containerClassName}>
-      <Canvas camera={{ position: [0, 10, 12], fov: 20 }}>
+      <Canvas
+        camera={{
+          position: INDONESIA_CAMERA_POSITION,
+          fov: INDONESIA_CAMERA_FOV,
+        }}
+      >
         <Scene landmarks={landmarks} onLandmarkSelect={onLandmarkSelect} />
       </Canvas>
     </div>

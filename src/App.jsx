@@ -1,29 +1,28 @@
-import { useState } from 'react'
-import InitialGuide from './components/ui/InitialGuide'
-import IndonesiaCanvas from './components/map/IndonesiaCanvas'
-import MonasOverlay from './components/overlays/MonasOverlay'
-import { landmarks } from './data/landmarks'
+import { useState } from "react";
+import InitialGuide from "./components/ui/InitialGuide";
+import IndonesiaCanvas from "./components/map/IndonesiaCanvas";
+import MonasOverlay from "./components/overlays/MonasOverlay";
+import { landmarks } from "./data/landmarks";
 
 function App() {
-  const [showGuide, setShowGuide] = useState(undefined)
-  const [isMonasOpen, setIsMonasOpen] = useState(false)
+  const [showGuide, setShowGuide] = useState(undefined);
+  const [isMonasOpen, setIsMonasOpen] = useState(false);
 
   const openGuide = () => {
-    localStorage.removeItem('hasSeenGuide')
-    setShowGuide(true)
-  }
+    localStorage.removeItem("hasSeenGuide");
+    setShowGuide(true);
+  };
 
   const handleLandmarkSelect = (landmark) => {
-    if (!landmark) return
-    if (landmark.id.startsWith('monas')) {
-      setIsMonasOpen(true)
+    if (!landmark) return;
+    if (landmark.id.startsWith("monas")) {
+      setIsMonasOpen(true);
     }
-  }
+  };
 
   return (
     <>
       <InitialGuide show={showGuide} onClose={() => setShowGuide(false)} />
-      <MonasOverlay open={isMonasOpen} onClose={() => setIsMonasOpen(false)} />
 
       <div className="fixed left-4 top-4 z-50 pointer-events-none">
         <h1 className="text-4xl font-bold text-white drop-shadow-lg mb-1">
@@ -42,13 +41,21 @@ function App() {
         Show Guide
       </button>
 
-      <IndonesiaCanvas
-        className="w-screen h-screen"
-        landmarks={landmarks}
-        onLandmarkSelect={handleLandmarkSelect}
-      />
+      {isMonasOpen ? (
+        <MonasOverlay
+          open={isMonasOpen}
+          onClose={() => setIsMonasOpen(false)}
+          pageMode
+        />
+      ) : (
+        <IndonesiaCanvas
+          className="w-screen h-screen"
+          landmarks={landmarks}
+          onLandmarkSelect={handleLandmarkSelect}
+        />
+      )}
     </>
-  )
+  );
 }
 
-export default App
+export default App;
