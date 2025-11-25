@@ -74,6 +74,7 @@ function LandmarkMarker({ mapBounds, landmark, onSelect }) {
   ]);
 
   const baseScale = landmark.scale ?? 1;
+  const showRing = !String(landmark.modelUri ?? "").includes("candi_prambanan");
 
   useFrame(() => {
     if (!markerRef.current) return;
@@ -97,7 +98,11 @@ function LandmarkMarker({ mapBounds, landmark, onSelect }) {
         object={clonedScene}
         onClick={(event) => {
           event.stopPropagation();
-          onSelect?.(landmark);
+          // provide the world position of the marker so parent can trigger animations
+          const worldPos = markerRef.current
+            ? markerRef.current.getWorldPosition(new Vector3()).toArray()
+            : null;
+          onSelect?.(landmark, worldPos);
         }}
         onPointerOver={(event) => {
           event.stopPropagation();
@@ -105,14 +110,16 @@ function LandmarkMarker({ mapBounds, landmark, onSelect }) {
         }}
         onPointerOut={() => setHovered(false)}
       />
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
-        <ringGeometry args={[LANDMARK_RING_INNER, LANDMARK_RING_OUTER, 48]} />
-        <meshBasicMaterial
-          color="#fbbf24"
-          transparent
-          opacity={hovered ? 0.9 : 0.6}
-        />
-      </mesh>
+      {showRing && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
+          <ringGeometry args={[LANDMARK_RING_INNER, LANDMARK_RING_OUTER, 48]} />
+          <meshBasicMaterial
+            color="#fbbf24"
+            transparent
+            opacity={hovered ? 0.9 : 0.6}
+          />
+        </mesh>
+      )}
     </group>
   );
 }

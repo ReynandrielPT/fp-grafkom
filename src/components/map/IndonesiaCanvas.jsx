@@ -22,6 +22,8 @@ function IndonesiaCanvas({
   className = "w-full h-full",
   landmarks = DEFAULT_LANDMARKS,
   onLandmarkSelect,
+  flyRequest,
+  onPlaneAnimationComplete,
 }) {
   const containerClassName = ["relative", className].filter(Boolean).join(" ");
 
@@ -33,7 +35,12 @@ function IndonesiaCanvas({
           fov: INDONESIA_CAMERA_FOV,
         }}
       >
-        <Scene landmarks={landmarks} onLandmarkSelect={onLandmarkSelect} />
+        <Scene
+          landmarks={landmarks}
+          onLandmarkSelect={onLandmarkSelect}
+          flyRequest={flyRequest}
+          onPlaneAnimationComplete={onPlaneAnimationComplete}
+        />
       </Canvas>
     </div>
   );
