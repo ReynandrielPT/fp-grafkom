@@ -1,22 +1,44 @@
-import { Canvas } from '@react-three/fiber'
-import { OrbitControls, useGLTF } from '@react-three/drei'
-import './App.css'
-
-function IndonesiaMap() {
-  const { scene } = useGLTF('/model/indonesia.glb')
-  return <primitive object={scene} />
-}
+import { useState } from 'react'
+import InitialGuide from './components/ui/InitialGuide'
+import IndonesiaCanvas from './components/map/IndonesiaCanvas'
+import MonasOverlay from './components/overlays/MonasOverlay'
+import { landmarks } from './data/landmarks'
 
 function App() {
+  const [showGuide, setShowGuide] = useState(undefined)
+  const [isMonasOpen, setIsMonasOpen] = useState(false)
+
+  const openGuide = () => {
+    localStorage.removeItem('hasSeenGuide')
+    setShowGuide(true)
+  }
+
+  const handleLandmarkSelect = (landmark) => {
+    if (!landmark) return
+    if (landmark.id.startsWith('monas')) {
+      setIsMonasOpen(true)
+    }
+  }
+
   return (
-    <div className="canvas-container">
-      <Canvas camera={{ position: [0, 5, 10], fov: 50 }}>
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[10, 10, 5]} intensity={1} />
-        <IndonesiaMap />
-        <OrbitControls />
-      </Canvas>
-    </div>
+    <>
+      <InitialGuide show={showGuide} onClose={() => setShowGuide(false)} />
+      <MonasOverlay open={isMonasOpen} onClose={() => setIsMonasOpen(false)} />
+
+      <button
+        className="fixed right-4 top-4 z-50 bg-white/10 text-white border border-white/20 px-3 py-2 rounded-md backdrop-blur hover:bg-white/20"
+        onClick={openGuide}
+        aria-label="Show guide"
+      >
+        Show Guide
+      </button>
+
+      <IndonesiaCanvas
+        className="w-screen h-screen"
+        landmarks={landmarks}
+        onLandmarkSelect={handleLandmarkSelect}
+      />
+    </>
   )
 }
 
