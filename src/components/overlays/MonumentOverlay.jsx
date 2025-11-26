@@ -10,12 +10,12 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { useGLTF, OrbitControls } from "@react-three/drei";
 import { gsap } from "gsap";
 import {
-  MONAS_PREVIEW_MODEL_SCALE,
-  MONAS_PREVIEW_MODEL_POSITION,
-  MONAS_PREVIEW_CAMERA_POSITION,
-  MONAS_PREVIEW_CAMERA_FOV,
-  MONAS_ORBIT_MIN_DISTANCE,
-  MONAS_ORBIT_MAX_DISTANCE,
+  MONUMENT_PREVIEW_MODEL_SCALE,
+  MONUMENT_PREVIEW_MODEL_POSITION,
+  MONUMENT_PREVIEW_CAMERA_POSITION,
+  MONUMENT_PREVIEW_CAMERA_FOV,
+  MONUMENT_ORBIT_MIN_DISTANCE,
+  MONUMENT_ORBIT_MAX_DISTANCE,
   ANIM_CONTAINER_FADE_IN_DURATION,
   ANIM_PANEL_OPEN_DURATION,
   ANIM_PANEL_CLOSE_DURATION,
@@ -28,8 +28,8 @@ import {
 
 function MonasPreviewModel({
   modelUri,
-  modelScale = MONAS_PREVIEW_MODEL_SCALE,
-  modelPosition = MONAS_PREVIEW_MODEL_POSITION,
+  modelScale = MONUMENT_PREVIEW_MODEL_SCALE,
+  modelPosition = MONUMENT_PREVIEW_MODEL_POSITION,
 }) {
   const groupRef = useRef();
   const { scene } = useGLTF(modelUri);
@@ -55,7 +55,7 @@ function PreviewCanvas({
   modelScale,
   modelPosition,
 }) {
-  const camPos = MONAS_PREVIEW_CAMERA_POSITION;
+  const camPos = MONUMENT_PREVIEW_CAMERA_POSITION;
   const controlsRef = useRef();
 
   useEffect(() => {
@@ -72,7 +72,7 @@ function PreviewCanvas({
       shadows={false}
       dpr={1}
       gl={{ antialias: false, powerPreference: "low-power" }}
-      camera={{ position: camPos, fov: MONAS_PREVIEW_CAMERA_FOV }}
+      camera={{ position: camPos, fov: MONUMENT_PREVIEW_CAMERA_FOV }}
     >
       <color attach="background" args={[0.05, 0.07, 0.12]} />
       <ambientLight intensity={0.7} />
@@ -90,8 +90,8 @@ function PreviewCanvas({
         enableZoom={true}
         enableRotate={true}
         autoRotate={false}
-        minDistance={MONAS_ORBIT_MIN_DISTANCE}
-        maxDistance={MONAS_ORBIT_MAX_DISTANCE}
+        minDistance={MONUMENT_ORBIT_MIN_DISTANCE}
+        maxDistance={MONUMENT_ORBIT_MAX_DISTANCE}
       />
     </Canvas>
   );
@@ -110,9 +110,18 @@ function MonumentOverlay({
     String(title ?? "")
       .toLowerCase()
       .includes("prambanan");
+  const isMonas =
+    String(modelUri ?? "")
+      .toLowerCase()
+      .includes("monas") ||
+    String(title ?? "")
+      .toLowerCase()
+      .includes("monas");
   const previewScale = isPrambanan
-    ? MONAS_PREVIEW_MODEL_SCALE * 50
-    : MONAS_PREVIEW_MODEL_SCALE;
+    ? MONUMENT_PREVIEW_MODEL_SCALE * 50
+    : isMonas
+    ? MONUMENT_PREVIEW_MODEL_SCALE * 20
+    : MONUMENT_PREVIEW_MODEL_SCALE;
   const [isVisible, setIsVisible] = useState(false);
   const containerRef = useRef(null);
   const panelRef = useRef(null);
@@ -207,7 +216,7 @@ function MonumentOverlay({
                 className="w-full h-full"
                 modelUri={modelUri}
                 modelScale={previewScale}
-                modelPosition={MONAS_PREVIEW_MODEL_POSITION}
+                modelPosition={MONUMENT_PREVIEW_MODEL_POSITION}
               />
             </main>
 
@@ -286,7 +295,7 @@ function MonumentOverlay({
             <PreviewCanvas
               modelUri={modelUri}
               modelScale={previewScale}
-              modelPosition={MONAS_PREVIEW_MODEL_POSITION}
+              modelPosition={MONUMENT_PREVIEW_MODEL_POSITION}
             />
           </div>
 

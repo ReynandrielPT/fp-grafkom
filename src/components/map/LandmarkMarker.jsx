@@ -76,8 +76,11 @@ function LandmarkMarker({ mapBounds, landmark, onSelect }) {
   const baseScale = landmark.scale ?? 1;
   const _uri = String(landmark.modelUri ?? "").toLowerCase();
   // hide the yellow ring for Prambanan and Borobudur
+  // hide the yellow ring for Prambanan, Borobudur, and Monas
   const showRing =
-    !_uri.includes("candi_prambanan") && !_uri.includes("borobudur");
+    !_uri.includes("candi_prambanan") &&
+    !_uri.includes("borobudur") &&
+    !_uri.includes("monas");
 
   useFrame(() => {
     if (!markerRef.current) return;

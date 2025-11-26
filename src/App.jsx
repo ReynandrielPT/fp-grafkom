@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import InitialGuide from "./components/ui/InitialGuide";
 import IndonesiaCanvas from "./components/map/IndonesiaCanvas";
 import MonumentOverlay from "./components/overlays/MonumentOverlay";
@@ -10,6 +10,7 @@ function App() {
   const [overlayLandmark, setOverlayLandmark] = useState(null);
   const [pendingFly, setPendingFly] = useState(null);
   const [lastClickedPos, setLastClickedPos] = useState(null);
+  const [lastClickedLandmark, setLastClickedLandmark] = useState(null);
 
   const openGuide = () => {
     localStorage.removeItem("hasSeenGuide");
@@ -31,6 +32,7 @@ function App() {
     if (pendingFly) return;
 
     // if clicked the same spot as last time, open overlay immediately (no animation)
+
     if (
       lastClickedPos &&
       worldPos &&
@@ -41,15 +43,17 @@ function App() {
     ) {
       setOverlayLandmark(landmark);
       setOverlayOpen(true);
+      // ensure we remember which landmark was last opened
+      setLastClickedLandmark(landmark);
+      if (worldPos && worldPos.length === 3) setLastClickedPos(worldPos);
       return;
     }
-
     // request fly animation from scene; include origin landmark so Scene
     // can decide whether to use a train (same island) or plane (different islands)
     setPendingFly({
       landmark,
       targetPos: worldPos,
-      originLandmark: overlayLandmark,
+      originLandmark: lastClickedLandmark,
     });
   };
 
@@ -59,9 +63,25 @@ function App() {
     if (targetPos) setLastClickedPos(targetPos);
     setPendingFly(null);
     // open the overlay for the landmark that requested the fly
-    if (pendingFly?.landmark) setOverlayLandmark(pendingFly.landmark);
+    if (pendingFly?.landmark) {
+      setOverlayLandmark(pendingFly.landmark);
+      // remember which landmark was landed on
+      setLastClickedLandmark(pendingFly.landmark);
+    }
     setOverlayOpen(true);
   };
+
+  // initialize lastClickedLandmark to Monas if available so first-click
+  // flights use Monas as origin for island comparisons
+  useEffect(() => {
+    if (lastClickedLandmark) return;
+    const monas = landmarks.find((l) =>
+      String(l?.modelUri ?? "")
+        .toLowerCase()
+        .includes("monas")
+    );
+    if (monas) setLastClickedLandmark(monas);
+  }, [lastClickedLandmark]);
 
   return (
     <>

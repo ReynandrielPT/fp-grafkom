@@ -5,9 +5,9 @@ export const landmarks = [
     modelUri: "/model/monas.glb",
     latitude: -6.175392,
     longitude: 106.827153,
-    scale: 0.006,
+    scale: 0.09,
     zIndex: 0,
-    yOffset: 0.05,
+    yOffset: 0.15,
     description:
       "Monumen Nasional is Jakarta's national monument built to commemorate Indonesia's independence; it is a symbol of the nation's struggle and a popular civic landmark.",
     island: "Java",
