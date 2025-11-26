@@ -18,8 +18,13 @@ function App() {
 
   const handleLandmarkSelect = (landmark, worldPos) => {
     if (!landmark) return;
-    // only handle monas-style landmarks and Candi Prambanan (others can be added later)
-    if (!landmark.id.startsWith("monas") && landmark.id !== "candi-prambanan")
+    // ignore plane or unspecified models
+    const uri = String(landmark.modelUri ?? "").toLowerCase();
+    if (
+      uri.includes("plane") ||
+      uri.includes("/2.glb") ||
+      uri.endsWith("/2.glb")
+    )
       return;
 
     // if an animation is pending, ignore additional clicks
@@ -39,8 +44,13 @@ function App() {
       return;
     }
 
-    // request plane fly animation from scene; scene will call back when done
-    setPendingFly({ landmark, targetPos: worldPos });
+    // request fly animation from scene; include origin landmark so Scene
+    // can decide whether to use a train (same island) or plane (different islands)
+    setPendingFly({
+      landmark,
+      targetPos: worldPos,
+      originLandmark: overlayLandmark,
+    });
   };
 
   const handlePlaneAnimationComplete = (result) => {

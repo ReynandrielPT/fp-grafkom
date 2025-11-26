@@ -69,6 +69,9 @@ function PreviewCanvas({
     <Canvas
       className={className}
       style={{ display: "block" }}
+      shadows={false}
+      dpr={1}
+      gl={{ antialias: false, powerPreference: "low-power" }}
       camera={{ position: camPos, fov: MONAS_PREVIEW_CAMERA_FOV }}
     >
       <color attach="background" args={[0.05, 0.07, 0.12]} />

@@ -30,6 +30,9 @@ function IndonesiaCanvas({
   return (
     <div className={containerClassName}>
       <Canvas
+        shadows={false}
+        dpr={1}
+        gl={{ antialias: false, powerPreference: "low-power" }}
         camera={{
           position: INDONESIA_CAMERA_POSITION,
           fov: INDONESIA_CAMERA_FOV,
