@@ -16,6 +16,7 @@ const baseLandmarks = [
     description:
       "Monumen Nasional is Jakarta's national monument built to commemorate Indonesia's independence; it is a symbol of the nation's struggle and a popular civic landmark.",
     island: "Java",
+    streetViewUrl: "https://www.google.com/maps/embed?pb=!4v1764335554591!6m8!1m7!1sDgvKbYXg0MEOxB4gWP73Sg!2m2!1d-7.307277722493254!2d112.7800860605329!3f168.73106!4f0!5f0.7820865974627469",
   },
   { // 2
     id: "candi-prambanan",
@@ -28,6 +29,14 @@ const baseLandmarks = [
     description:
       "Candi Prambanan is a 9th-century Hindu temple complex in Central Java, celebrated for its tall, pointed architecture and richly carved reliefs.",
     island: "Java",
+    streetViewUrl: "https://www.google.com/maps/embed?pb=!4v1764335554591!6m8!1m7!1sDgvKbYXg0MEOxB4gWP73Sg!2m2!1d-7.307277722493254!2d112.7800860605329!3f168.73106!4f0!5f0.7820865974627469",
+    additionalContent: {
+      title: "Sejarah Singkat",
+      paragraphs: [
+        "Candi Prambanan adalah kompleks candi Hindu dari abad ke-9 yang terletak di Jawa Tengah. Dibangun sebagai penghormatan kepada Trimurti (Siwa, Wisnu, dan Brahma), Prambanan terkenal karena arsitekturnya yang tinggi dan relief yang kaya.",
+        "Kompleks ini sempat mengalami kerusakan dan pemugaran, tetapi tetap menjadi situs warisan penting dan tujuan wisata budaya.",
+      ],
+    },
   },
   { // 3
     id: "borobudur",
@@ -40,6 +49,7 @@ const baseLandmarks = [
     description:
       "Candi Borobudur is a monumental 8th–9th century Mahayana Buddhist temple in Central Java, known for its stupas and extensive stone reliefs.",
     island: "Java",
+    streetViewUrl: "https://www.google.com/maps/embed?pb=!4v1764335554591!6m8!1m7!1sDgvKbYXg0MEOxB4gWP73Sg!2m2!1d-7.307277722493254!2d112.7800860605329!3f168.73106!4f0!5f0.7820865974627469",
   },
   { // 4
     id: "monumen-kapsul-waktu",
@@ -53,6 +63,7 @@ const baseLandmarks = [
     description:
       "Monumen Kapsul Waktu (Time Capsule Monument) in Merauke commemorates a local historical moment; this entry places it in Papua for exploration and transport animations.",
     island: "Papua",
+    streetViewUrl: "https://www.google.com/maps/embed?pb=!4v1764335554591!6m8!1m7!1sDgvKbYXg0MEOxB4gWP73Sg!2m2!1d-7.307277722493254!2d112.7800860605329!3f168.73106!4f0!5f0.7820865974627469",
   },
   { // 5
     id: "tugu-katulistiwa",
@@ -65,6 +76,7 @@ const baseLandmarks = [
     description:
       "Tugu Katulistiwa marks a point on the equator and is a local landmark often visited to learn about the Earth's geography and equatorial phenomena.",
     island: "Kalimantan",
+    streetViewUrl: "https://www.google.com/maps/embed?pb=!4v1764335554591!6m8!1m7!1sDgvKbYXg0MEOxB4gWP73Sg!2m2!1d-7.307277722493254!2d112.7800860605329!3f168.73106!4f0!5f0.7820865974627469",
   },
   { // 6
     id: "patung-suroboyo",
@@ -77,6 +89,7 @@ const baseLandmarks = [
     description:
       "Patung Suroboyo is an iconic statue in Surabaya depicting a shark and a crocodile, symbols tied to the city's founding legend and civic identity.",
     island: "Java",
+    streetViewUrl: "https://www.google.com/maps/embed?pb=!4v1764335554591!6m8!1m7!1sDgvKbYXg0MEOxB4gWP73Sg!2m2!1d-7.307277722493254!2d112.7800860605329!3f168.73106!4f0!5f0.7820865974627469",
   },
   { // 7
     id: "museum-ampera",
@@ -89,6 +102,7 @@ const baseLandmarks = [
     description:
       "The Ampera Bridge is a prominent landmark that spans the Musi River in Palembang; it is closely associated with the city's history and riverfront identity.",
     island: "Sumatra",
+    streetViewUrl: "https://www.google.com/maps/embed?pb=!4v1764335554591!6m8!1m7!1sDgvKbYXg0MEOxB4gWP73Sg!2m2!1d-7.307277722493254!2d112.7800860605329!3f168.73106!4f0!5f0.7820865974627469",
   },
   { // 8
     id: "masjid-raya-sumbar",
@@ -101,6 +115,7 @@ const baseLandmarks = [
     description:
       "Masjid Raya Sumatera Barat is the grand mosque representing West Sumatran religious and cultural life, often noted for its regional architectural influences.",
     island: "Sumatra",
+    streetViewUrl: "https://www.google.com/maps/embed?pb=!4v1764335554591!6m8!1m7!1sDgvKbYXg0MEOxB4gWP73Sg!2m2!1d-7.307277722493254!2d112.7800860605329!3f168.73106!4f0!5f0.7820865974627469",
   },
   { // 9
     id: "jam-gadang",
@@ -113,6 +128,7 @@ const baseLandmarks = [
     description:
       "Jam Gadang is a historic clock tower and central landmark of Bukittinggi, widely recognized as a cultural symbol of the city.",
     island: "Sumatra",
+    streetViewUrl: "https://www.google.com/maps/embed?pb=!4v1764335554591!6m8!1m7!1sDgvKbYXg0MEOxB4gWP73Sg!2m2!1d-7.307277722493254!2d112.7800860605329!3f168.73106!4f0!5f0.7820865974627469",
   },
   // {
   //   id: "candi-jabung",
@@ -134,6 +150,7 @@ const baseLandmarks = [
     description:
       "Candi Bahal is an ancient temple complex in North Sumatra, part of the region's early medieval heritage and archaeological sites.",
     island: "Sumatra",
+    streetViewUrl: "https://www.google.com/maps/embed?pb=!4v1764335554591!6m8!1m7!1sDgvKbYXg0MEOxB4gWP73Sg!2m2!1d-7.307277722493254!2d112.7800860605329!3f168.73106!4f0!5f0.7820865974627469",
   },
   {
     id: "candi-apit",
@@ -146,6 +163,7 @@ const baseLandmarks = [
     description:
       "Candi Apit is a historic temple site of local significance, representing Indonesia's rich archaeological and cultural landscape.",
     island: "Sumatra",
+    streetViewUrl: "https://www.google.com/maps/embed?pb=!4v1764335554591!6m8!1m7!1sDgvKbYXg0MEOxB4gWP73Sg!2m2!1d-7.307277722493254!2d112.7800860605329!3f168.73106!4f0!5f0.7820865974627469",
   },
 ];
 

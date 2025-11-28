@@ -94,22 +94,31 @@ function MonumentOverlay({
   open,
   onClose,
   pageMode = false,
+  landmark = null,
   modelUri = resolveAssetPath("model/monas.glb"),
   title = "Monumen Nasional (Monas)",
   description = null,
 }) {
+  const effectiveModelUri = landmark?.modelUri ?? modelUri;
+  const effectiveTitle = landmark?.name ?? title;
+  const effectiveDescription = landmark?.description ?? description;
+  const streetViewUrl = landmark?.streetViewUrl;
+  const additionalContent = landmark?.additionalContent;
+
   const isPrambanan =
-    String(modelUri ?? "").includes("candi_prambanan") ||
-    String(title ?? "").toLowerCase().includes("prambanan");
+    String(effectiveModelUri ?? "").includes("candi_prambanan") ||
+    String(effectiveTitle ?? "").toLowerCase().includes("prambanan");
   const isMonas =
-    String(modelUri ?? "").toLowerCase().includes("monas") ||
-    String(title ?? "").toLowerCase().includes("monas");
+    String(effectiveModelUri ?? "").toLowerCase().includes("monas") ||
+    String(effectiveTitle ?? "").toLowerCase().includes("monas");
   const previewScale = isPrambanan
     ? MONUMENT_PREVIEW_MODEL_SCALE * 50
     : isMonas
       ? MONUMENT_PREVIEW_MODEL_SCALE * 20
       : MONUMENT_PREVIEW_MODEL_SCALE;
+  
   const [isVisible, setIsVisible] = useState(false);
+  const [viewMode, setViewMode] = useState("3d"); // "3d" or "streetview"
   const containerRef = useRef(null);
   const panelRef = useRef(null);
 
@@ -186,60 +195,72 @@ function MonumentOverlay({
           className="mx-auto flex h-full max-w-7xl w-full flex-col gap-4"
         >
           <header className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold text-white">{title}</h2>
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/90 hover:bg-white/10"
-            >
-              Back to map
-            </button>
+            <h2 className="text-2xl font-semibold text-white">{effectiveTitle}</h2>
+            <div className="flex items-center gap-2">
+              {streetViewUrl && (
+                <button
+                  type="button"
+                  onClick={() => setViewMode(viewMode === "3d" ? "streetview" : "3d")}
+                  className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition"
+                >
+                  {viewMode === "3d" ? "Street View" : "3D Model"}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/90 hover:bg-white/10"
+              >
+                Back to map
+              </button>
+            </div>
           </header>
 
           <div className="flex grow gap-6">
             <main className="flex-1 overflow-hidden bg-slate-900">
-              <PreviewCanvas
-                className="w-full h-full"
-                modelUri={modelUri}
-                modelScale={previewScale}
-                modelPosition={MONUMENT_PREVIEW_MODEL_POSITION}
-              />
+              {viewMode === "3d" ? (
+                <PreviewCanvas
+                  className="w-full h-full"
+                  modelUri={effectiveModelUri}
+                  modelScale={previewScale}
+                  modelPosition={MONUMENT_PREVIEW_MODEL_POSITION}
+                />
+              ) : (
+                <iframe
+                  src={streetViewUrl}
+                  className="w-full h-full"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Street View"
+                />
+              )}
             </main>
 
-            <aside
-              className={
-                "shrink-0 space-y-4 overflow-auto bg-slate-800 p-4 text-white/90 " +
-                (isPrambanan ? "w-72" : "w-96")
-              }
-            >
+            <aside className="shrink-0 space-y-4 overflow-auto bg-slate-800 p-4 text-white/90 w-96">
               <p>
-                {description ??
+                {effectiveDescription ??
                   "Explore the selected landmark using the 3D viewer."}
               </p>
               <p>
-                Gunakan klik dan seret untuk memutar model. Zoom dengan roda
-                mouse atau pinch pada trackpad untuk mendekatkan tampilan.
+                {viewMode === "3d"
+                  ? "Gunakan klik dan seret untuk memutar model. Zoom dengan roda mouse atau pinch pada trackpad untuk mendekatkan tampilan."
+                  : "Explore the landmark location in Google Street View. Drag to look around and use controls to navigate."}
               </p>
-              {isPrambanan && (
+              {additionalContent && (
                 <section className="pt-2 border-t border-white/5 text-sm text-white/80">
-                  <h3 className="font-semibold mb-2">Sejarah Singkat</h3>
-                  <p>
-                    Candi Prambanan adalah kompleks candi Hindu dari abad ke-9
-                    yang terletak di Jawa Tengah. Dibangun sebagai penghormatan
-                    kepada Trimurti (Siwa, Wisnu, dan Brahma), Prambanan
-                    terkenal karena arsitekturnya yang tinggi dan relief yang
-                    kaya.
-                  </p>
-                  <p className="mt-2">
-                    Kompleks ini sempat mengalami kerusakan dan pemugaran,
-                    tetapi tetap menjadi situs warisan penting dan tujuan wisata
-                    budaya.
-                  </p>
+                  <h3 className="font-semibold mb-2">{additionalContent.title}</h3>
+                  {additionalContent.paragraphs.map((paragraph, index) => (
+                    <p key={index} className={index > 0 ? "mt-2" : ""}>
+                      {paragraph}
+                    </p>
+                  ))}
                 </section>
               )}
               <div className="mt-4 flex flex-col gap-2 text-sm text-white/70">
                 <div className="rounded-full border border-white/10 px-3 py-1">
-                  {title}
+                  {effectiveTitle}
                 </div>
               </div>
             </aside>
@@ -262,46 +283,70 @@ function MonumentOverlay({
         className="relative w-full max-w-3xl overflow-hidden rounded-3xl border border-white/10 bg-slate-900/95 p-6 text-white shadow-2xl backdrop-blur"
         onClick={(event) => event.stopPropagation()}
       >
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute right-4 top-4 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-sm font-medium text-white/90 transition hover:bg-white/20"
-        >
-          Close
-        </button>
+        <div className="absolute right-4 top-4 flex items-center gap-2">
+          {streetViewUrl && (
+            <button
+              type="button"
+              onClick={() => setViewMode(viewMode === "3d" ? "streetview" : "3d")}
+              className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-sm font-medium text-white/90 transition hover:bg-white/20"
+            >
+              {viewMode === "3d" ? "Street View" : "3D Model"}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-sm font-medium text-white/90 transition hover:bg-white/20"
+          >
+            Close
+          </button>
+        </div>
 
         <div className="grid gap-6 md:grid-cols-2">
           <div className={`${isPrambanan ? "h-96" : "h-72"} overflow-hidden bg-slate-900`}>
-            <PreviewCanvas
-              modelUri={modelUri}
-              modelScale={previewScale}
-              modelPosition={MONUMENT_PREVIEW_MODEL_POSITION}
-            />
+            {viewMode === "3d" ? (
+              <PreviewCanvas
+                modelUri={effectiveModelUri}
+                modelScale={previewScale}
+                modelPosition={MONUMENT_PREVIEW_MODEL_POSITION}
+              />
+            ) : (
+              <iframe
+                src={streetViewUrl}
+                className="w-full h-full"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Street View"
+              />
+            )}
           </div>
 
           <div className="flex flex-col gap-3 text-white/90">
-            <h2 className="text-2xl font-semibold text-white">{title}</h2>
+            <h2 className="text-2xl font-semibold text-white">{effectiveTitle}</h2>
             <p>
-              {description ??
+              {effectiveDescription ??
                 "Explore the selected landmark using the 3D viewer."}
             </p>
             <p>
-              Klik dan seret model utama untuk menjelajahi wilayah lain, lalu
-              pilih penanda untuk kembali melihat detailnya di sini.
+              {viewMode === "3d"
+                ? "Klik dan seret model utama untuk menjelajahi wilayah lain, lalu pilih penanda untuk kembali melihat detailnya di sini."
+                : "Explore the landmark location in Google Street View. Drag to look around and use controls to navigate."}
             </p>
-            {isPrambanan && (
+            {additionalContent && (
               <section className="mt-4 border-t border-white/5 pt-4 text-sm text-white/80">
-                <h3 className="font-semibold">Sejarah Candi Prambanan</h3>
-                <p className="mt-2">
-                  Dibangun pada abad ke-9, Candi Prambanan merupakan salah satu
-                  kompleks candi Hindu terbesar di Indonesia. Kompleks ini
-                  menjadi pusat budaya dan keagamaan pada masanya.
-                </p>
+                <h3 className="font-semibold">{additionalContent.title}</h3>
+                {additionalContent.paragraphs.map((paragraph, index) => (
+                  <p key={index} className={index === 0 ? "mt-2" : "mt-2"}>
+                    {paragraph}
+                  </p>
+                ))}
               </section>
             )}
             <div className="mt-auto flex flex-wrap items-center gap-2 text-sm text-white/70">
               <span className="rounded-full border border-white/10 px-3 py-1">
-                {title}
+                {effectiveTitle}
               </span>
             </div>
           </div>

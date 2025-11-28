@@ -118,9 +118,7 @@ function App() {
           open={overlayOpen}
           onClose={() => setOverlayOpen(false)}
           pageMode
-          modelUri={overlayLandmark.modelUri}
-          title={overlayLandmark.name}
-          description={overlayLandmark.description}
+          landmark={overlayLandmark}
         />
       )}
     </>
