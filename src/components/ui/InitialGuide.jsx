@@ -1,31 +1,39 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react";
 
 function InitialGuide({ show, onClose } = {}) {
-  const [isVisible, setIsVisible] = useState(false)
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     if (show === true) {
-      setIsVisible(true)
-      return
+      setIsVisible(true);
+      return;
     }
     if (show === false) {
-      setIsVisible(false)
-      return
+      setIsVisible(false);
+      return;
     }
 
-    const hasSeenGuide = localStorage.getItem('hasSeenGuide')
+    const hasSeenGuide = localStorage.getItem("hasSeenGuide");
     if (!hasSeenGuide) {
-      setIsVisible(true)
+      setIsVisible(true);
     }
-  }, [show])
+  }, [show]);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") handleClose();
+    };
+    if (isVisible) window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isVisible]);
 
   const handleClose = () => {
-    setIsVisible(false)
-    localStorage.setItem('hasSeenGuide', 'true')
-    if (typeof onClose === 'function') onClose()
-  }
+    setIsVisible(false);
+    localStorage.setItem("hasSeenGuide", "true");
+    if (typeof onClose === "function") onClose();
+  };
 
-  if (!isVisible) return null
+  if (!isVisible) return null;
 
   return (
     <div
@@ -35,10 +43,20 @@ function InitialGuide({ show, onClose } = {}) {
       aria-modal="true"
     >
       <div
-        className="max-w-md w-full bg-gradient-to-br from-indigo-600 to-purple-600 p-6 rounded-xl shadow-2xl backdrop-blur-md"
+        className="max-w-md w-full bg-gradient-to-br from-indigo-600 to-purple-600 p-6 rounded-xl shadow-2xl backdrop-blur-md relative"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-white text-2xl font-semibold text-center mb-4">Welcome to Indonesian Map</h2>
+        <button
+          aria-label="Close guide"
+          onClick={handleClose}
+          className="absolute right-3 top-3 text-white/80 hover:text-white bg-white/6 rounded-full w-8 h-8 flex items-center justify-center focus:outline-none"
+        >
+          ✕
+        </button>
+
+        <h2 className="text-white text-2xl font-semibold text-center mb-4">
+          Welcome to Indonesian Map
+        </h2>
 
         <div className="flex flex-col gap-4 mb-6">
           <div className="flex items-center gap-4 bg-white/10 p-3 rounded-md">
@@ -66,10 +84,12 @@ function InitialGuide({ show, onClose } = {}) {
           </div>
         </div>
 
-        <p className="text-center text-white/90">Tap or click anywhere to start exploring</p>
+        <p className="text-center text-white/90">
+          Tap or click anywhere to start exploring
+        </p>
       </div>
     </div>
-  )
+  );
 }
 
-export default InitialGuide
+export default InitialGuide;

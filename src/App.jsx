@@ -3,6 +3,7 @@ import InitialGuide from "./components/ui/InitialGuide";
 import IndonesiaCanvas from "./components/map/IndonesiaCanvas";
 import MonumentOverlay from "./components/overlays/MonumentOverlay";
 import { landmarks } from "./data/landmarks";
+import LandmarkList from "./components/ui/LandmarkList";
 
 function App() {
   const [showGuide, setShowGuide] = useState(undefined);
@@ -111,6 +112,8 @@ function App() {
         flyRequest={pendingFly}
         onPlaneAnimationComplete={handlePlaneAnimationComplete}
       />
+
+      <LandmarkList landmarks={landmarks} onSelect={handleLandmarkSelect} />
 
       {overlayOpen && overlayLandmark && (
         <MonumentOverlay

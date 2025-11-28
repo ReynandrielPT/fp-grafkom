@@ -458,9 +458,10 @@ function Scene({
 
       <Suspense fallback={null}>
         <IndonesiaMap onBoundsReady={setMapBounds} />
-        {activeLandmarks.map((landmark) => (
+        {activeLandmarks.map((landmark, i) => (
           <LandmarkMarker
             key={landmark.id}
+            index={i + 1}
             mapBounds={mapBounds}
             landmark={landmark}
             onSelect={onLandmarkSelect}
