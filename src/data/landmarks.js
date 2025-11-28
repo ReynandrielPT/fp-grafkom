@@ -1,8 +1,12 @@
+import { resolveAssetPath } from "../utils/assets";
+
+const model = (file) => resolveAssetPath(`model/${file}`);
+
 export const landmarks = [
   {
     id: "monas-jakarta",
     name: "Monumen Nasional (Monas)",
-    modelUri: "/model/monas.glb",
+    modelUri: model("monas.glb"),
     latitude: -6.175392,
     longitude: 106.827153,
     scale: 0.09,
@@ -15,7 +19,7 @@ export const landmarks = [
   {
     id: "candi-prambanan",
     name: "Candi Prambanan",
-    modelUri: "/model/candi_prambanan.glb",
+    modelUri: model("candi_prambanan.glb"),
     latitude: -7.852222,
     longitude: 110.491667,
     scale: 0.3,
@@ -28,7 +32,7 @@ export const landmarks = [
   {
     id: "borobudur",
     name: "Candi Borobudur",
-    modelUri: "/model/borobudur.glb",
+    modelUri: model("borobudur.glb"),
     latitude: -7.607874,
     longitude: 110.203751,
     scale: 0.2,
@@ -41,7 +45,7 @@ export const landmarks = [
   {
     id: "monumen-kapsul-waktu",
     name: "Monumen Kapsul Waktu",
-    modelUri: "/model/monumen_kapsul_waktu.glb",
+    modelUri: model("monumen_kapsul_waktu.glb"),
     // location: Merauke, Papua
     latitude: -8.51,
     longitude: 140.355,
@@ -55,7 +59,7 @@ export const landmarks = [
   {
     id: "tugu-katulistiwa",
     name: "Tugu Katulistiwa (Equator Monument)",
-    modelUri: "/model/tugu_katulistiwa_3d.glb",
+    modelUri: model("tugu_katulistiwa_3d.glb"),
     latitude: 0.02618,
     longitude: 109.3425,
     scale: 0.02,
@@ -68,7 +72,7 @@ export const landmarks = [
   {
     id: "patung-suroboyo",
     name: "Patung Suroboyo",
-    modelUri: "/model/patungsuroboyo.glb",
+    modelUri: model("patungsuroboyo.glb"),
     latitude: -7.257472,
     longitude: 112.752088,
     scale: 0.002,
@@ -81,7 +85,7 @@ export const landmarks = [
   {
     id: "museum-ampera",
     name: "Jembatan Ampera / Museum Ampera",
-    modelUri: "/model/museum_ampera.glb",
+    modelUri: model("museum_ampera.glb"),
     latitude: -2.990934,
     longitude: 104.756371,
     scale: 0.009,
@@ -94,7 +98,7 @@ export const landmarks = [
   {
     id: "masjid-raya-sumbar",
     name: "Masjid Raya Sumatera Barat",
-    modelUri: "/model/masjid_raya_sumatera_barat.glb",
+    modelUri: model("masjid_raya_sumatera_barat.glb"),
     latitude: -0.947083,
     longitude: 100.417181,
     scale: 0.002,
@@ -107,7 +111,7 @@ export const landmarks = [
   {
     id: "jam-gadang",
     name: "Jam Gadang",
-    modelUri: "/model/jam_gadang.glb",
+    modelUri: model("jam_gadang.glb"),
     latitude: -0.3055,
     longitude: 100.3693,
     scale: 0.01,
@@ -120,7 +124,7 @@ export const landmarks = [
   {
     id: "indonesia-model",
     name: "Model Indonesia",
-    modelUri: "/model/indonesia.glb",
+    modelUri: model("indonesia.glb"),
     latitude: -2.5,
     longitude: 118.0,
     scale: 0.02,
@@ -143,7 +147,7 @@ export const landmarks = [
   {
     id: "candi-bahal",
     name: "Candi Bahal",
-    modelUri: "/model/candi_bahal.glb",
+    modelUri: model("candi_bahal.glb"),
     latitude: 2.076944,
     longitude: 99.065278,
     scale: 0.004,
@@ -156,7 +160,7 @@ export const landmarks = [
   {
     id: "candi-apit",
     name: "Candi Apit",
-    modelUri: "/model/candi_apit.glb",
+    modelUri: model("candi_apit.glb"),
     latitude: -0.503333,
     longitude: 101.41,
     scale: 0.02,

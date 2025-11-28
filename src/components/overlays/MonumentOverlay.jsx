@@ -25,6 +25,7 @@ import {
   ANIM_PANEL_CLOSED_SCALE,
   ANIM_PANEL_OPEN_Y,
 } from "../const";
+import { resolveAssetPath } from "../../utils/assets";
 
 function MonasPreviewModel({
   modelUri,
@@ -101,7 +102,7 @@ function MonumentOverlay({
   open,
   onClose,
   pageMode = false,
-  modelUri = "/model/monas.glb",
+  modelUri = resolveAssetPath("model/monas.glb"),
   title = "Monumen Nasional (Monas)",
   description = null,
 }) {

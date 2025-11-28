@@ -5,12 +5,13 @@ import {
   INDONESIA_CAMERA_POSITION,
   INDONESIA_CAMERA_FOV,
 } from "../const";
+import { resolveAssetPath } from "../../utils/assets";
 
 const DEFAULT_LANDMARKS = [
   {
     id: "monas",
     name: "Monumen Nasional",
-    modelUri: "/model/monas.glb",
+    modelUri: resolveAssetPath("model/monas.glb"),
     latitude: -6.2088,
     longitude: 106.8456,
     scale: DEFAULT_LANDMARKS_SCALE,

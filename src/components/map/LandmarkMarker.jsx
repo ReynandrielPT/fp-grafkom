@@ -154,8 +154,6 @@ function LandmarkMarker({ mapBounds, landmark, onSelect, index }) {
     }
   });
 
-  if (!position) return null;
-
   const startLoad = () => {
     if (clonedScene || loadingRef.current) return;
     loadingRef.current = true;
@@ -257,6 +255,8 @@ function LandmarkMarker({ mapBounds, landmark, onSelect, index }) {
 
     return () => clearTimeout(t);
   }, [clonedScene]);
+
+  if (!position) return null;
 
   return (
     <group ref={markerRef} position={position}>

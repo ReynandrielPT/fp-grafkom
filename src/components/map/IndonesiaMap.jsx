@@ -2,12 +2,13 @@ import { useEffect, useMemo, useRef } from "react";
 import { useGLTF } from "@react-three/drei";
 import { Box3 } from "three";
 import { INDONESIA_MAP_ROTATION, INDONESIA_MAP_SCALE } from "../const";
+import { resolveAssetPath } from "../../utils/assets";
 
-useGLTF.preload("/model/indonesia.glb");
+useGLTF.preload(resolveAssetPath("model/indonesia.glb"));
 
 function IndonesiaMap({ onBoundsReady }) {
   const groupRef = useRef();
-  const { scene } = useGLTF("/model/indonesia.glb");
+  const { scene } = useGLTF(resolveAssetPath("model/indonesia.glb"));
   const clonedScene = useMemo(() => {
     const cloned = scene.clone(true);
     cloned.rotation.set(...INDONESIA_MAP_ROTATION);

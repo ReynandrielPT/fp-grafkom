@@ -11,10 +11,11 @@ import {
 import IndonesiaMap from "./IndonesiaMap";
 import LandmarkMarker from "./LandmarkMarker";
 import ControlsTarget from "./ControlsTarget";
+import { resolveAssetPath } from "../../utils/assets";
 
-useGLTF.preload("/model/plane.glb");
-useGLTF.preload("/model/train.glb");
-useGLTF.preload("/model/rail.glb");
+useGLTF.preload(resolveAssetPath("model/plane.glb"));
+useGLTF.preload(resolveAssetPath("model/train.glb"));
+useGLTF.preload(resolveAssetPath("model/rail.glb"));
 // constant Y (world units) to place train animation near the ground.
 // Adjust this value if you want the train higher/lower above the map.
 const TRAIN_Y = 0.2;
@@ -23,7 +24,7 @@ const RAILS_ENABLED = false;
 
 function PlaneAnimator({ start, end, play, onComplete }) {
   const ref = useRef();
-  const { scene, animations } = useGLTF("/model/plane.glb");
+  const { scene, animations } = useGLTF(resolveAssetPath("model/plane.glb"));
   const cloned = useMemo(() => {
     if (!scene) return null;
     // deep clone the scene
@@ -165,8 +166,8 @@ function PlaneAnimator({ start, end, play, onComplete }) {
 
 function TrainAnimator({ start, end, play, onComplete }) {
   const ref = useRef();
-  const { scene, animations } = useGLTF("/model/train.glb");
-  const { scene: railScene } = useGLTF("/model/rail.glb");
+  const { scene, animations } = useGLTF(resolveAssetPath("model/train.glb"));
+  const { scene: railScene } = useGLTF(resolveAssetPath("model/rail.glb"));
   const [rails, setRails] = useState([]);
   const cloned = useMemo(() => {
     if (!scene) return null;
