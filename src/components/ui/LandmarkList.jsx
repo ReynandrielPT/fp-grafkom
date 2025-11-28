@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 export default function LandmarkList({
   landmarks,
@@ -7,37 +7,22 @@ export default function LandmarkList({
   activeLandmarkId,
 }) {
   const [query, setQuery] = useState("");
-  const hasValidLandmarks = Array.isArray(landmarks);
-  const safeLandmarks = useMemo(
-    () => (hasValidLandmarks ? landmarks : []),
-    [hasValidLandmarks, landmarks]
-  );
 
   const filtered = useMemo(() => {
-    const q = String(query ?? "")
-      .trim()
-      .toLowerCase();
-    if (!q) return safeLandmarks;
-    return safeLandmarks.filter((l) => {
+    if (!Array.isArray(landmarks)) return [];
+    const q = String(query ?? "").trim().toLowerCase();
+    if (!q) return landmarks;
+    return landmarks.filter((l) => {
       return (
-        String(l.name ?? "")
-          .toLowerCase()
-          .includes(q) ||
-        String(l.location ?? "")
-          .toLowerCase()
-          .includes(q)
+        String(l.name ?? "").toLowerCase().includes(q) ||
+        String(l.location ?? "").toLowerCase().includes(q)
       );
     });
-  }, [safeLandmarks, query]);
+  }, [landmarks, query]);
 
-  if (!hasValidLandmarks) return null;
+  if (!Array.isArray(landmarks)) return null;
 
-  const total = safeLandmarks.length;
   const showEmpty = filtered.length === 0;
-
-  const handleHover = (landmark) => {
-    onHoverChange?.(landmark);
-  };
 
   return (
     <aside className="pointer-events-auto fixed right-6 top-24 z-50 w-[360px] max-h-[78vh] bg-slate-900/70 backdrop-blur-xl border border-white/10 rounded-2xl p-5 text-sm text-white shadow-2xl">
@@ -49,7 +34,7 @@ export default function LandmarkList({
           <h2 className="text-2xl font-semibold">Landmark Library</h2>
         </div>
         <span className="text-xs font-medium px-3 py-1 rounded-full bg-white/10 text-white/80">
-          {filtered.length}/{total}
+          {filtered.length}/{landmarks.length}
         </span>
       </div>
 
@@ -91,10 +76,10 @@ export default function LandmarkList({
                   <button
                     type="button"
                     onClick={() => onSelect?.(l, null)}
-                    onMouseEnter={() => handleHover(l)}
-                    onMouseLeave={() => handleHover(null)}
-                    onFocus={() => handleHover(l)}
-                    onBlur={() => handleHover(null)}
+                    onMouseEnter={() => onHoverChange?.(l)}
+                    onMouseLeave={() => onHoverChange?.(null)}
+                    onFocus={() => onHoverChange?.(l)}
+                    onBlur={() => onHoverChange?.(null)}
                     className={`w-full rounded-xl border px-3 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-white/40 ${
                       isActive
                         ? "border-white/40 bg-white/15 shadow-lg"

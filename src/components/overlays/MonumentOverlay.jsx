@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas } from "@react-three/fiber";
 import { useGLTF, OrbitControls } from "@react-three/drei";
 import { gsap } from "gsap";
 import {
@@ -32,17 +32,11 @@ function MonasPreviewModel({
   modelScale = MONUMENT_PREVIEW_MODEL_SCALE,
   modelPosition = MONUMENT_PREVIEW_MODEL_POSITION,
 }) {
-  const groupRef = useRef();
   const { scene } = useGLTF(modelUri);
   const clonedScene = useMemo(() => scene.clone(true), [scene]);
 
-  useFrame(() => {
-    if (!groupRef.current) return;
-  });
-
   return (
     <primitive
-      ref={groupRef}
       object={clonedScene}
       scale={modelScale}
       position={modelPosition}
@@ -69,8 +63,6 @@ function PreviewCanvas({
   return (
     <Canvas
       className={className}
-      style={{ display: "block" }}
-      shadows={false}
       dpr={1}
       gl={{ antialias: false, powerPreference: "low-power" }}
       camera={{ position: camPos, fov: MONUMENT_PREVIEW_CAMERA_FOV }}
@@ -108,21 +100,15 @@ function MonumentOverlay({
 }) {
   const isPrambanan =
     String(modelUri ?? "").includes("candi_prambanan") ||
-    String(title ?? "")
-      .toLowerCase()
-      .includes("prambanan");
+    String(title ?? "").toLowerCase().includes("prambanan");
   const isMonas =
-    String(modelUri ?? "")
-      .toLowerCase()
-      .includes("monas") ||
-    String(title ?? "")
-      .toLowerCase()
-      .includes("monas");
+    String(modelUri ?? "").toLowerCase().includes("monas") ||
+    String(title ?? "").toLowerCase().includes("monas");
   const previewScale = isPrambanan
     ? MONUMENT_PREVIEW_MODEL_SCALE * 50
     : isMonas
-    ? MONUMENT_PREVIEW_MODEL_SCALE * 20
-    : MONUMENT_PREVIEW_MODEL_SCALE;
+      ? MONUMENT_PREVIEW_MODEL_SCALE * 20
+      : MONUMENT_PREVIEW_MODEL_SCALE;
   const [isVisible, setIsVisible] = useState(false);
   const containerRef = useRef(null);
   const panelRef = useRef(null);
@@ -162,7 +148,6 @@ function MonumentOverlay({
     } else {
       const tl = gsap.timeline({
         onComplete: () => {
-          if (!containerRef.current) return;
           gsap.set(containerRef.current, { opacity: 0, pointerEvents: "none" });
           setIsVisible(false);
         },
@@ -286,13 +271,7 @@ function MonumentOverlay({
         </button>
 
         <div className="grid gap-6 md:grid-cols-2">
-          <div
-            className={
-              isPrambanan
-                ? "h-96 overflow-hidden bg-slate-900"
-                : "h-72 overflow-hidden bg-slate-900"
-            }
-          >
+          <div className={`${isPrambanan ? "h-96" : "h-72"} overflow-hidden bg-slate-900`}>
             <PreviewCanvas
               modelUri={modelUri}
               modelScale={previewScale}
