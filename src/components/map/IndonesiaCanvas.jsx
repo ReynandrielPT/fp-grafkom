@@ -1,10 +1,6 @@
 import { Canvas } from "@react-three/fiber";
 import Scene from "./Scene";
-import {
-  DEFAULT_LANDMARKS_SCALE,
-  INDONESIA_CAMERA_POSITION,
-  INDONESIA_CAMERA_FOV,
-} from "../const";
+import { CAMERA, LANDMARK } from "../../config/mapConfig";
 import { resolveAssetPath } from "../../utils/assets";
 
 const DEFAULT_LANDMARKS = [
@@ -14,11 +10,23 @@ const DEFAULT_LANDMARKS = [
     modelUri: resolveAssetPath("model/monas.glb"),
     latitude: -6.2088,
     longitude: 106.8456,
-    scale: DEFAULT_LANDMARKS_SCALE,
+    scale: LANDMARK.DEFAULT_SCALE,
     zIndex: 0,
   },
 ];
 
+/**
+ * IndonesiaCanvas Component
+ * Wrapper for the 3D canvas containing the Indonesia scene
+ * 
+ * @param {string} className - CSS classes for the canvas container
+ * @param {Array} landmarks - Array of landmark objects to display
+ * @param {Function} onLandmarkSelect - Callback when a landmark is selected
+ * @param {Object} flyRequest - Request for camera flight animation
+ * @param {Function} onPlaneAnimationComplete - Callback when animation completes
+ * @param {string} hoveredLandmarkId - ID of currently hovered landmark
+ * @param {Function} onLoadingProgress - Callback for loading progress updates
+ */
 function IndonesiaCanvas({
   className = "w-full h-full",
   landmarks = DEFAULT_LANDMARKS,
@@ -26,6 +34,7 @@ function IndonesiaCanvas({
   flyRequest,
   onPlaneAnimationComplete,
   hoveredLandmarkId,
+  onLoadingProgress,
 }) {
   const containerClassName = ["relative", className].filter(Boolean).join(" ");
 
@@ -36,8 +45,8 @@ function IndonesiaCanvas({
         dpr={1}
         gl={{ antialias: false, powerPreference: "low-power" }}
         camera={{
-          position: INDONESIA_CAMERA_POSITION,
-          fov: INDONESIA_CAMERA_FOV,
+          position: CAMERA.INDONESIA_POSITION,
+          fov: CAMERA.INDONESIA_FOV,
         }}
       >
         <Scene
@@ -46,6 +55,7 @@ function IndonesiaCanvas({
           flyRequest={flyRequest}
           onPlaneAnimationComplete={onPlaneAnimationComplete}
           hoveredLandmarkId={hoveredLandmarkId}
+          onLoadingProgress={onLoadingProgress}
         />
       </Canvas>
     </div>

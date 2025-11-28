@@ -10,24 +10,21 @@ import { Billboard, Text, useCursor } from "@react-three/drei";
 import gsap from "gsap";
 import { Box3, MathUtils, Vector3 } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
-import {
-  DEFAULT_LANDMARKS_SCALE,
-  LANDMARK_GLOBAL_Y_OFFSET,
-  LANDMARK_LABEL_FONT_SIZE,
-  LANDMARK_LABEL_HEIGHT,
-  LANDMARK_LABEL_HITBOX_WIDTH,
-  LANDMARK_LABEL_HITBOX_HEIGHT,
-} from "../const";
-
-const COORDINATE_BOUNDS = {
-  latMin: -12,
-  latMax: 6,
-  lonMin: 95,
-  lonMax: 141,
-};
+import { LANDMARK, COORDINATE_BOUNDS } from "../../config/mapConfig";
 
 const DISABLE_TEXT_RAYCAST = () => null;
 
+/**
+ * LandmarkMarker Component
+ * Renders a 3D marker with label for a landmark on the map
+ * Shows model on hover with smooth animations
+ * 
+ * @param {Object} mapBounds - Map boundaries for positioning
+ * @param {Object} landmark - Landmark data object
+ * @param {Function} onSelect - Callback when landmark is clicked
+ * @param {number} index - Display index for the marker
+ * @param {boolean} externallyHovered - Whether marker is hovered from external source
+ */
 function LandmarkMarker({
   mapBounds,
   landmark,
@@ -53,7 +50,7 @@ function LandmarkMarker({
   const objectScale = useMemo(() => {
     const manualScale = Number(landmark?.scale);
     if (Number.isFinite(manualScale) && manualScale > 0) return manualScale;
-    return DEFAULT_LANDMARKS_SCALE;
+    return LANDMARK.DEFAULT_SCALE;
   }, [landmark?.scale]);
 
   const disposeScene = useCallback((obj) => {
@@ -96,11 +93,11 @@ function LandmarkMarker({
     const width = mapBounds.max.x - mapBounds.min.x;
     const depth = mapBounds.max.z - mapBounds.min.z;
     const longitudeRatio =
-      (landmark.longitude - COORDINATE_BOUNDS.lonMin) /
-      (COORDINATE_BOUNDS.lonMax - COORDINATE_BOUNDS.lonMin);
+      (landmark.longitude - COORDINATE_BOUNDS.LON_MIN) /
+      (COORDINATE_BOUNDS.LON_MAX - COORDINATE_BOUNDS.LON_MIN);
     const latitudeRatio =
-      (landmark.latitude - COORDINATE_BOUNDS.latMin) /
-      (COORDINATE_BOUNDS.latMax - COORDINATE_BOUNDS.latMin);
+      (landmark.latitude - COORDINATE_BOUNDS.LAT_MIN) /
+      (COORDINATE_BOUNDS.LAT_MAX - COORDINATE_BOUNDS.LAT_MIN);
 
     const clampedLonRatio = MathUtils.clamp(longitudeRatio, 0, 1);
     const clampedLatRatio = MathUtils.clamp(latitudeRatio, 0, 1);
@@ -111,7 +108,7 @@ function LandmarkMarker({
     const y =
       mapBounds.min.y +
       (mapBounds.max.y - mapBounds.min.y) * 0.01 +
-      LANDMARK_GLOBAL_Y_OFFSET;
+      LANDMARK.GLOBAL_Y_OFFSET;
 
     return [x, y, z];
   }, [
@@ -121,7 +118,7 @@ function LandmarkMarker({
     mapBounds,
   ]);
 
-  const labelY = LANDMARK_LABEL_HEIGHT;
+  const labelY = LANDMARK.LABEL_HEIGHT;
 
   const getMarkerWorldPosition = useCallback(() => {
     if (!markerRef.current) return null;
@@ -329,13 +326,13 @@ function LandmarkMarker({
           onPointerLeave={handlePointerLeave}
         >
           <planeGeometry
-            args={[LANDMARK_LABEL_HITBOX_WIDTH, LANDMARK_LABEL_HITBOX_HEIGHT]}
+            args={[LANDMARK.LABEL_HITBOX_WIDTH, LANDMARK.LABEL_HITBOX_HEIGHT]}
           />
           <meshBasicMaterial transparent opacity={0} />
         </mesh>
         <Text
           color="#ffffff"
-          fontSize={LANDMARK_LABEL_FONT_SIZE}
+          fontSize={LANDMARK.LABEL_FONT_SIZE}
           maxWidth={2}
           anchorX="center"
           anchorY="middle"
