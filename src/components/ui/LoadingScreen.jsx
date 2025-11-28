@@ -39,7 +39,7 @@ function LoadingScreen({ progress, isComplete }) {
             />
           </div>
           <p className="text-white/60 text-sm">
-            Loading 3D models... {displayProgress}%
+            Loading 3D models... {Math.round(displayProgress)}%
           </p>
         </div>
 
