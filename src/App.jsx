@@ -19,35 +19,28 @@ function App() {
     setShowGuide(true);
   };
 
+  const isSamePosition = (pos1, pos2) => {
+    if (!pos1 || !pos2 || pos1.length !== 3 || pos2.length !== 3) return false;
+    return Math.abs(pos1[0] - pos2[0]) < 0.001 &&
+           Math.abs(pos1[1] - pos2[1]) < 0.001 &&
+           Math.abs(pos1[2] - pos2[2]) < 0.001;
+  };
+
   const handleLandmarkSelect = (landmark, worldPos) => {
     if (!landmark) return;
     // ignore plane or unspecified models
     const uri = String(landmark.modelUri ?? "").toLowerCase();
-    if (
-      uri.includes("plane") ||
-      uri.includes("/2.glb") ||
-      uri.endsWith("/2.glb")
-    )
-      return;
+    if (uri.includes("plane") || uri.includes("/2.glb") || uri.endsWith("/2.glb")) return;
 
     // if an animation is pending, ignore additional clicks
     if (pendingFly) return;
 
     // if clicked the same spot as last time, open overlay immediately (no animation)
-
-    if (
-      lastClickedPos &&
-      worldPos &&
-      lastClickedPos.length === 3 &&
-      Math.abs(lastClickedPos[0] - worldPos[0]) < 0.001 &&
-      Math.abs(lastClickedPos[1] - worldPos[1]) < 0.001 &&
-      Math.abs(lastClickedPos[2] - worldPos[2]) < 0.001
-    ) {
+    if (isSamePosition(lastClickedPos, worldPos)) {
       setOverlayLandmark(landmark);
       setOverlayOpen(true);
-      // ensure we remember which landmark was last opened
       setLastClickedLandmark(landmark);
-      if (worldPos && worldPos.length === 3) setLastClickedPos(worldPos);
+      if (worldPos) setLastClickedPos(worldPos);
       return;
     }
     // request fly animation from scene; include origin landmark so Scene
@@ -73,18 +66,12 @@ function App() {
     setOverlayOpen(true);
   };
 
-  const handleListHoverChange = (landmark) => {
-    setHoveredLandmarkId(landmark?.id ?? null);
-  };
-
   // initialize lastClickedLandmark to Monas if available so first-click
   // flights use Monas as origin for island comparisons
   useEffect(() => {
     if (lastClickedLandmark) return;
     const monas = landmarks.find((l) =>
-      String(l?.modelUri ?? "")
-        .toLowerCase()
-        .includes("monas")
+      String(l?.modelUri ?? "").toLowerCase().includes("monas")
     );
     if (monas) setLastClickedLandmark(monas);
   }, [lastClickedLandmark]);
@@ -122,7 +109,7 @@ function App() {
       <LandmarkList
         landmarks={landmarks}
         onSelect={handleLandmarkSelect}
-        onHoverChange={handleListHoverChange}
+        onHoverChange={(landmark) => setHoveredLandmarkId(landmark?.id ?? null)}
         activeLandmarkId={hoveredLandmarkId}
       />
 
@@ -131,9 +118,7 @@ function App() {
           open={overlayOpen}
           onClose={() => setOverlayOpen(false)}
           pageMode
-          modelUri={overlayLandmark.modelUri}
-          title={overlayLandmark.name}
-          description={overlayLandmark.description}
+          landmark={overlayLandmark}
         />
       )}
     </>

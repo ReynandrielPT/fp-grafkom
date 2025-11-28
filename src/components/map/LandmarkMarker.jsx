@@ -60,26 +60,20 @@ function LandmarkMarker({
     if (!obj) return;
     try {
       // kill any running tweens first
-      try {
-        if (hoverTweenRef.current) hoverTweenRef.current.kill();
-        if (rotationTweenRef.current) rotationTweenRef.current.kill();
-      } catch (e) {
-        console.warn("LandmarkMarker: failed to stop tweens before dispose", e);
-      }
+      hoverTweenRef.current?.kill();
+      rotationTweenRef.current?.kill();
+      
       obj.traverse((child) => {
         if (child.isMesh) {
-          if (child.geometry) child.geometry.dispose();
+          child.geometry?.dispose();
           if (child.material) {
             const disposeMaterial = (mat) => {
               if (!mat) return;
               // dispose textures
-              for (const key in mat) {
-                const value = mat[key];
-                if (value && value.isTexture) {
-                  value.dispose();
-                }
-              }
-              if (mat.dispose) mat.dispose();
+              Object.values(mat).forEach(value => {
+                if (value?.isTexture) value.dispose();
+              });
+              mat.dispose?.();
             };
 
             if (Array.isArray(child.material)) {
@@ -181,18 +175,8 @@ function LandmarkMarker({
     const obj = modelRef.current;
     if (clonedScene && obj) {
       // stop continuous rotation
-      try {
-        if (rotationTweenRef.current) rotationTweenRef.current.kill();
-      } catch (e) {
-        console.warn("LandmarkMarker: failed to stop rotation tween", e);
-      }
-
-      // animate scale down, then dispose
-      try {
-        if (hoverTweenRef.current) hoverTweenRef.current.kill();
-      } catch (e) {
-        console.warn("LandmarkMarker: failed to stop hover tween", e);
-      }
+      rotationTweenRef.current?.kill();
+      hoverTweenRef.current?.kill();
 
       hoverTweenRef.current = gsap.to(obj.scale, {
         x: 0.001,
@@ -201,14 +185,7 @@ function LandmarkMarker({
         duration: 0.5,
         ease: "power3.in",
         onComplete: () => {
-          try {
-            disposeScene(clonedScene);
-          } catch (e) {
-            console.warn(
-              "LandmarkMarker: failed to dispose scene after shrink",
-              e
-            );
-          }
+          disposeScene(clonedScene);
           setClonedScene(null);
         },
       });
@@ -225,12 +202,8 @@ function LandmarkMarker({
     const obj = modelRef.current;
     if (!obj) return;
 
-    try {
-      if (hoverTweenRef.current) hoverTweenRef.current.kill();
-      if (rotationTweenRef.current) rotationTweenRef.current.kill();
-    } catch (e) {
-      console.warn("LandmarkMarker: failed to reset hover tweens", e);
-    }
+    hoverTweenRef.current?.kill();
+    rotationTweenRef.current?.kill();
 
     if (resetScale) {
       obj.scale.setScalar(0.001);
