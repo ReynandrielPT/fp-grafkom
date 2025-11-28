@@ -1,7 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 function InitialGuide({ show, onClose } = {}) {
   const [isVisible, setIsVisible] = useState(false);
+
+  const handleClose = useCallback(() => {
+    setIsVisible(false);
+    localStorage.setItem("hasSeenGuide", "true");
+    if (typeof onClose === "function") onClose();
+  }, [onClose]);
 
   useEffect(() => {
     if (show === true) {
@@ -25,13 +31,7 @@ function InitialGuide({ show, onClose } = {}) {
     };
     if (isVisible) window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [isVisible]);
-
-  const handleClose = () => {
-    setIsVisible(false);
-    localStorage.setItem("hasSeenGuide", "true");
-    if (typeof onClose === "function") onClose();
-  };
+  }, [isVisible, handleClose]);
 
   if (!isVisible) return null;
 
@@ -80,6 +80,14 @@ function InitialGuide({ show, onClose } = {}) {
             <div className="text-white">
               <div className="font-semibold">Scroll Wheel</div>
               <div className="text-sm opacity-90">Zoom in / out</div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 bg-white/10 p-3 rounded-md">
+            <div className="text-2xl">⌨️</div>
+            <div className="text-white">
+              <div className="font-semibold">W / A / S / D</div>
+              <div className="text-sm opacity-90">Move the camera view</div>
             </div>
           </div>
         </div>

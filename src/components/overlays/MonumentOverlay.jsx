@@ -36,7 +36,7 @@ function MonasPreviewModel({
   const { scene } = useGLTF(modelUri);
   const clonedScene = useMemo(() => scene.clone(true), [scene]);
 
-  useFrame((_, delta) => {
+  useFrame(() => {
     if (!groupRef.current) return;
   });
 

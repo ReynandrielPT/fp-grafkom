@@ -1,12 +1,17 @@
 import { Suspense, useEffect, useRef, useState, useMemo } from "react";
 import { OrbitControls, useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { Vector3, Box3 } from "three";
+import { Vector3 } from "three";
 import { gsap } from "gsap";
 import {
   ORBIT_MIN_DISTANCE,
   ORBIT_MAX_DISTANCE,
   ORBIT_DAMPING_FACTOR,
+  LANDMARK_GLOBAL_Y_OFFSET,
+  PLANE_ANIMATION_SPEED,
+  TRAIN_ANIMATION_SPEED,
+  PLANE_MODEL_SCALE,
+  TRAIN_MODEL_SCALE,
 } from "../const";
 import IndonesiaMap from "./IndonesiaMap";
 import LandmarkMarker from "./LandmarkMarker";
@@ -21,10 +26,23 @@ useGLTF.preload(resolveAssetPath("model/rail.glb"));
 const TRAIN_Y = 0.2;
 // Toggle rails visuals on/off. Set to `true` to re-enable rails later.
 const RAILS_ENABLED = false;
+const KEYBOARD_MOVE_SPEED = 6; // world units per second for WASD panning
+const MOVEMENT_KEYS = new Set(["w", "a", "s", "d"]);
+
+const isTypingTarget = (target) => {
+  if (!target) return false;
+  const tag = target.tagName;
+  return (
+    tag === "INPUT" ||
+    tag === "TEXTAREA" ||
+    tag === "SELECT" ||
+    target?.isContentEditable
+  );
+};
 
 function PlaneAnimator({ start, end, play, onComplete }) {
   const ref = useRef();
-  const { scene, animations } = useGLTF(resolveAssetPath("model/plane.glb"));
+  const { scene } = useGLTF(resolveAssetPath("model/plane.glb"));
   const cloned = useMemo(() => {
     if (!scene) return null;
     // deep clone the scene
@@ -35,11 +53,11 @@ function PlaneAnimator({ start, end, play, onComplete }) {
       c.traverse((node) => {
         if (node.animations && node.animations.length) node.animations = [];
       });
-    } catch (err) {
+    } catch {
       // ignore
     }
     return c;
-  }, [scene, animations]);
+  }, [scene]);
   const targetRef = useRef(new Vector3());
 
   useFrame(() => {
@@ -64,34 +82,27 @@ function PlaneAnimator({ start, end, play, onComplete }) {
     }
 
     const p = ref.current.position;
-    // Use constant Y for train so it always runs at the same ground height
-    p.set(start[0], TRAIN_Y, start[2]);
-    // slightly larger initial base so the plane start is more visible
-    const initialBase = 0.008;
-    ref.current.scale.set(initialBase, initialBase, initialBase);
-
-    console.log("PlaneAnimator: play", { start, end, initialBase });
+    const startY = typeof start[1] === "number" ? start[1] : TRAIN_Y;
+    p.set(start[0], startY, start[2]);
+    ref.current.scale.set(
+      PLANE_MODEL_SCALE,
+      PLANE_MODEL_SCALE,
+      PLANE_MODEL_SCALE
+    );
 
     const s = p.clone();
-    const e = new Vector3(end[0], end[1], end[2]);
-    const mid = new Vector3().addVectors(s, e).multiplyScalar(0.5);
-    // lower the apex so the plane doesn't climb too high — keep a gentle arc
-    mid.y = Math.max(s.y, e.y) + 0.6;
+    const safeEndY = typeof end[1] === "number" ? end[1] : startY;
+    const e = new Vector3(end[0], safeEndY, end[2]);
     targetRef.current.copy(e);
 
-    // lengthen flight so the whole animation plays slower and appears smoother
-    const flyDuration = 4.5;
+    const distance = s.distanceTo(e);
+    const flyDuration = Math.max(distance / PLANE_ANIMATION_SPEED, 1.5);
     const tl = gsap.timeline({
       onComplete: () => {
         if (ref.current) ref.current.visible = false;
         onComplete?.({ targetPos: end });
       },
     });
-
-    // slightly bigger in-flight size, but still small
-    const takeoffBase = 0.018;
-    // landed size slightly larger so it's visible but still small
-    const landedBase = 0.008;
 
     // reveal at the start (tiny), then fly — scale will be driven by flight progress for smooth grow/shrink
     tl.set(ref.current, { visible: true });
@@ -117,20 +128,6 @@ function PlaneAnimator({ start, end, play, onComplete }) {
         const arc = 4 * t * omt * apexOffset;
         bezPos.y = baseY + arc;
         p.copy(bezPos);
-
-        // compute scale based on flight progress so it grows in air and shrinks in air
-        // piecewise: rise from initialBase -> takeoffBase, then fall to landedBase
-        let curScale = initialBase;
-        if (t <= 0.5) {
-          const u = t / 0.5; // 0..1
-          const eased = 0.5 - 0.5 * Math.cos(Math.PI * u); // cosine easeInOut
-          curScale = initialBase * (1 - eased) + takeoffBase * eased;
-        } else {
-          const u = (t - 0.5) / 0.5; // 0..1
-          const eased = 0.5 - 0.5 * Math.cos(Math.PI * u);
-          curScale = takeoffBase * (1 - eased) + landedBase * eased;
-        }
-        ref.current.scale.set(curScale, curScale, curScale);
 
         // forward direction: strictly horizontal from start->end to keep heading stable
         bezDir.copy(e).sub(s);
@@ -166,7 +163,7 @@ function PlaneAnimator({ start, end, play, onComplete }) {
 
 function TrainAnimator({ start, end, play, onComplete }) {
   const ref = useRef();
-  const { scene, animations } = useGLTF(resolveAssetPath("model/train.glb"));
+  const { scene } = useGLTF(resolveAssetPath("model/train.glb"));
   const { scene: railScene } = useGLTF(resolveAssetPath("model/rail.glb"));
   const [rails, setRails] = useState([]);
   const cloned = useMemo(() => {
@@ -177,11 +174,11 @@ function TrainAnimator({ start, end, play, onComplete }) {
       c.traverse((node) => {
         if (node.animations && node.animations.length) node.animations = [];
       });
-    } catch (err) {
+    } catch {
       // ignore
     }
     return c;
-  }, [scene, animations]);
+  }, [scene]);
 
   const targetRef = useRef(new Vector3());
 
@@ -207,25 +204,24 @@ function TrainAnimator({ start, end, play, onComplete }) {
     const p = ref.current.position;
     // place train at constant ground Y
     p.set(start[0], TRAIN_Y, start[2]);
-    const initialBase = 0.01;
-    ref.current.scale.set(initialBase, initialBase, initialBase);
+    ref.current.scale.set(
+      TRAIN_MODEL_SCALE,
+      TRAIN_MODEL_SCALE,
+      TRAIN_MODEL_SCALE
+    );
 
     const s = p.clone();
     const e = new Vector3(end[0], TRAIN_Y, end[2]);
     targetRef.current.copy(e);
 
     const pathLen = s.distanceTo(e);
-    // slower duration — minimum 6s, scale with distance
-    const duration = Math.max(6.0, pathLen * 0.9);
+    const duration = Math.max(pathLen / TRAIN_ANIMATION_SPEED, 2.5);
     const tl = gsap.timeline({
       onComplete: () => {
         if (ref.current) ref.current.visible = false;
         onComplete?.({ targetPos: end });
       },
     });
-
-    const takeoffBase = 0.02;
-    const landedBase = 0.01;
 
     // spawn rail segments along the path before revealing the train
     try {
@@ -266,19 +262,6 @@ function TrainAnimator({ start, end, play, onComplete }) {
         bezPos.lerpVectors(s, e, t);
         bezPos.y = TRAIN_Y;
         p.copy(bezPos);
-
-        // simple scale tween for subtle effect
-        let curScale = initialBase;
-        if (t <= 0.5) {
-          const u = t / 0.5;
-          const eased = 0.5 - 0.5 * Math.cos(Math.PI * u);
-          curScale = initialBase * (1 - eased) + takeoffBase * eased;
-        } else {
-          const u = (t - 0.5) / 0.5;
-          const eased = 0.5 - 0.5 * Math.cos(Math.PI * u);
-          curScale = takeoffBase * (1 - eased) + landedBase * eased;
-        }
-        ref.current.scale.set(curScale, curScale, curScale);
 
         // update heading target to look ahead along the path
         bezDir.copy(e).sub(s);
@@ -322,10 +305,21 @@ function Scene({
   onLandmarkSelect,
   flyRequest,
   onPlaneAnimationComplete,
+  hoveredLandmarkId,
 }) {
   const [mapBounds, setMapBounds] = useState(null);
   const controlsRef = useRef();
-  const activeLandmarks = Array.isArray(landmarks) ? landmarks : [];
+  const activeLandmarks = useMemo(
+    () => (Array.isArray(landmarks) ? landmarks : []),
+    [landmarks]
+  );
+  const pressedKeysRef = useRef(new Set());
+  const moveVectorsRef = useRef({
+    forward: new Vector3(),
+    right: new Vector3(),
+    move: new Vector3(),
+    up: new Vector3(0, 1, 0),
+  });
   const lastPosRef = useRef(null);
   const persistedInitRef = useRef(false);
   const [planePlay, setPlanePlay] = useState(false);
@@ -342,6 +336,30 @@ function Scene({
       }
     });
   }, [activeLandmarks]);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      const key = event.key?.toLowerCase();
+      if (!MOVEMENT_KEYS.has(key)) return;
+      if (isTypingTarget(event.target)) return;
+      event.preventDefault();
+      pressedKeysRef.current.add(key);
+    };
+
+    const handleKeyUp = (event) => {
+      const key = event.key?.toLowerCase();
+      if (!MOVEMENT_KEYS.has(key)) return;
+      pressedKeysRef.current.delete(key);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, []);
 
   // when map bounds are ready, set the initial plane position to Monas
   useEffect(() => {
@@ -381,7 +399,7 @@ function Scene({
     const y =
       mapBounds.min.y +
       (mapBounds.max.y - mapBounds.min.y) * 0.01 +
-      (monas.yOffset ?? 0);
+      LANDMARK_GLOBAL_Y_OFFSET;
 
     lastPosRef.current = [x, y, z];
     persistedInitRef.current = true;
@@ -445,6 +463,44 @@ function Scene({
     }
   }, [flyRequest, mapBounds, activeLandmarks, onPlaneAnimationComplete]);
 
+  useFrame((state, delta) => {
+    const controls = controlsRef.current;
+    if (!controls) return;
+    const pressed = pressedKeysRef.current;
+    if (!pressed.size) return;
+
+    const { forward, right, move, up } = moveVectorsRef.current;
+    state.camera.getWorldDirection(forward);
+    forward.y = 0;
+    if (forward.lengthSq() < 1e-6) {
+      forward.set(0, 0, -1);
+    } else {
+      forward.normalize();
+    }
+
+    up.set(0, 1, 0);
+    right.copy(forward).cross(up);
+    right.y = 0;
+    if (right.lengthSq() < 1e-6) {
+      right.set(1, 0, 0);
+    } else {
+      right.normalize();
+    }
+
+    move.set(0, 0, 0);
+    if (pressed.has("w")) move.add(forward);
+    if (pressed.has("s")) move.sub(forward);
+    if (pressed.has("d")) move.add(right);
+    if (pressed.has("a")) move.sub(right);
+
+    if (!move.lengthSq()) return;
+
+    move.normalize().multiplyScalar(KEYBOARD_MOVE_SPEED * delta);
+    state.camera.position.add(move);
+    controls.target.add(move);
+    controls.update();
+  });
+
   return (
     <>
       <color attach="background" args={[0.04, 0.07, 0.12]} />
@@ -462,10 +518,13 @@ function Scene({
         {activeLandmarks.map((landmark, i) => (
           <LandmarkMarker
             key={landmark.id}
-            index={i + 1}
+            index={landmark.displayIndex ?? i + 1}
             mapBounds={mapBounds}
             landmark={landmark}
             onSelect={onLandmarkSelect}
+            externallyHovered={Boolean(
+              hoveredLandmarkId && landmark.id === hoveredLandmarkId
+            )}
           />
         ))}
         <PlaneAnimator

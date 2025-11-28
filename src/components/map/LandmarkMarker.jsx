@@ -1,33 +1,45 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useFrame, useThree } from "@react-three/fiber";
-import { useCursor, Text } from "@react-three/drei";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { Billboard, Text, useCursor } from "@react-three/drei";
 import gsap from "gsap";
 import { Box3, MathUtils, Vector3 } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import {
-  LANDMARK_DISTANCE_SCALE,
-  LANDMARK_MIN_SCALE,
-  LANDMARK_MAX_SCALE,
-  LANDMARK_RING_INNER,
-  LANDMARK_RING_OUTER,
+  DEFAULT_LANDMARKS_SCALE,
+  LANDMARK_GLOBAL_Y_OFFSET,
+  LANDMARK_LABEL_FONT_SIZE,
+  LANDMARK_LABEL_HEIGHT,
+  LANDMARK_LABEL_HITBOX_WIDTH,
+  LANDMARK_LABEL_HITBOX_HEIGHT,
 } from "../const";
 
 const COORDINATE_BOUNDS = {
-  latMin: -11,
+  latMin: -12,
   latMax: 6,
   lonMin: 95,
   lonMax: 141,
 };
 
-const tmpVec = new Vector3();
+const DISABLE_TEXT_RAYCAST = () => null;
 
-function LandmarkMarker({ mapBounds, landmark, onSelect, index }) {
+function LandmarkMarker({
+  mapBounds,
+  landmark,
+  onSelect,
+  index,
+  externallyHovered = false,
+}) {
   const markerRef = useRef();
   const modelRef = useRef();
-  const textRef = useRef();
-  const { camera } = useThree();
   const [hovered, setHovered] = useState(false);
-  useCursor(hovered);
+  const hoverActive = hovered || externallyHovered;
+  useCursor(hoverActive);
 
   // State for the loaded/cloned scene (loaded on hover)
   const [clonedScene, setClonedScene] = useState(null);
@@ -38,24 +50,22 @@ function LandmarkMarker({ mapBounds, landmark, onSelect, index }) {
   const hoverTweenRef = useRef(null);
   const rotationTweenRef = useRef(null);
 
-  const centerScene = (sceneObj) => {
-    const box = new Box3().setFromObject(sceneObj);
-    const size = new Vector3();
-    box.getSize(size);
-    const center = box.getCenter(new Vector3());
-    sceneObj.position.sub(center);
-    sceneObj.position.y += size.y / 2;
-    sceneObj.updateMatrixWorld();
-  };
+  const objectScale = useMemo(() => {
+    const manualScale = Number(landmark?.scale);
+    if (Number.isFinite(manualScale) && manualScale > 0) return manualScale;
+    return DEFAULT_LANDMARKS_SCALE;
+  }, [landmark?.scale]);
 
-  const disposeScene = (obj) => {
+  const disposeScene = useCallback((obj) => {
     if (!obj) return;
     try {
       // kill any running tweens first
       try {
         if (hoverTweenRef.current) hoverTweenRef.current.kill();
         if (rotationTweenRef.current) rotationTweenRef.current.kill();
-      } catch (e) {}
+      } catch (e) {
+        console.warn("LandmarkMarker: failed to stop tweens before dispose", e);
+      }
       obj.traverse((child) => {
         if (child.isMesh) {
           if (child.geometry) child.geometry.dispose();
@@ -81,10 +91,9 @@ function LandmarkMarker({ mapBounds, landmark, onSelect, index }) {
         }
       });
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.warn("Error disposing scene", e);
     }
-  };
+  }, []);
 
   const position = useMemo(() => {
     if (!mapBounds) return null;
@@ -108,53 +117,26 @@ function LandmarkMarker({ mapBounds, landmark, onSelect, index }) {
     const y =
       mapBounds.min.y +
       (mapBounds.max.y - mapBounds.min.y) * 0.01 +
-      (landmark.yOffset ?? 0);
+      LANDMARK_GLOBAL_Y_OFFSET;
 
     return [x, y, z];
   }, [
     landmark.latitude,
     landmark.longitude,
     landmark.zIndex,
-    landmark.yOffset,
     mapBounds,
   ]);
 
-  const baseScale = landmark.scale ?? 1;
-  const _uri = String(landmark.modelUri ?? "").toLowerCase();
-  // hide the yellow ring for Prambanan and Borobudur
-  // hide the yellow ring for Prambanan, Borobudur, and Monas
-  const showRing =
-    !_uri.includes("candi_prambanan") &&
-    !_uri.includes("borobudur") &&
-    !_uri.includes("monas");
+  const labelY = LANDMARK_LABEL_HEIGHT;
 
-  useFrame(() => {
-    if (!markerRef.current) return;
-    markerRef.current.getWorldPosition(tmpVec);
-    const distance = camera.position.distanceTo(tmpVec);
+  const getMarkerWorldPosition = useCallback(() => {
+    if (!markerRef.current) return null;
+    const v = new Vector3();
+    markerRef.current.getWorldPosition(v);
+    return v;
+  }, []);
 
-    // Compute scale from distance and landmark base scale (no hover animation).
-    const distanceScale = MathUtils.clamp(
-      distance * LANDMARK_DISTANCE_SCALE,
-      LANDMARK_MIN_SCALE,
-      LANDMARK_MAX_SCALE
-    );
-
-    // Make loaded models 2x bigger by default.
-    const BASE_MULTIPLIER = 2;
-    const scaleValue = distanceScale * baseScale * BASE_MULTIPLIER;
-    markerRef.current.scale.setScalar(scaleValue);
-
-    // Keep label text approximately the same size in world space by
-    // counter-scaling it relative to the group's scale.
-    if (textRef.current) {
-      const safe = Math.max(scaleValue, 1e-6);
-      const inv = 1 / safe;
-      textRef.current.scale.set(inv, inv, inv);
-    }
-  });
-
-  const startLoad = () => {
+  const startLoad = useCallback(() => {
     if (clonedScene || loadingRef.current) return;
     loadingRef.current = true;
     activeRef.current = true;
@@ -168,20 +150,31 @@ function LandmarkMarker({ mapBounds, landmark, onSelect, index }) {
           disposeScene(data.scene);
           return;
         }
-        const sceneClone = data.scene.clone(true);
-        centerScene(sceneClone);
-        setClonedScene(sceneClone);
+        const clone = data.scene.clone(true);
+        try {
+          const box = new Box3().setFromObject(clone);
+          const size = new Vector3();
+          // compute size before using it
+          box.getSize(size);
+          const center = box.getCenter(new Vector3());
+          // center the model at origin and lift it so its base sits on Y=0
+          clone.position.sub(center);
+          clone.position.y += size.y / 2;
+          clone.updateMatrixWorld();
+        } catch (err) {
+          console.warn("LandmarkMarker: failed to recenter scene", err);
+        }
+        setClonedScene(clone);
       },
       undefined,
       (err) => {
         loadingRef.current = false;
-        // eslint-disable-next-line no-console
         console.error("Error loading glTF:", err);
       }
     );
-  };
+  }, [clonedScene, landmark?.modelUri, disposeScene]);
 
-  const stopAndUnload = () => {
+  const stopAndUnload = useCallback(() => {
     activeRef.current = false;
     setHovered(false);
     // If model is mounted, play shrink + stop rotation then dispose on complete
@@ -190,12 +183,16 @@ function LandmarkMarker({ mapBounds, landmark, onSelect, index }) {
       // stop continuous rotation
       try {
         if (rotationTweenRef.current) rotationTweenRef.current.kill();
-      } catch (e) {}
+      } catch (e) {
+        console.warn("LandmarkMarker: failed to stop rotation tween", e);
+      }
 
       // animate scale down, then dispose
       try {
         if (hoverTweenRef.current) hoverTweenRef.current.kill();
-      } catch (e) {}
+      } catch (e) {
+        console.warn("LandmarkMarker: failed to stop hover tween", e);
+      }
 
       hoverTweenRef.current = gsap.to(obj.scale, {
         x: 0.001,
@@ -206,7 +203,12 @@ function LandmarkMarker({ mapBounds, landmark, onSelect, index }) {
         onComplete: () => {
           try {
             disposeScene(clonedScene);
-          } catch (e) {}
+          } catch (e) {
+            console.warn(
+              "LandmarkMarker: failed to dispose scene after shrink",
+              e
+            );
+          }
           setClonedScene(null);
         },
       });
@@ -217,131 +219,164 @@ function LandmarkMarker({ mapBounds, landmark, onSelect, index }) {
       disposeScene(clonedScene);
       setClonedScene(null);
     }
-  };
+  }, [clonedScene, disposeScene]);
+
+  const runHoverAnimations = useCallback((resetScale = false) => {
+    const obj = modelRef.current;
+    if (!obj) return;
+
+    try {
+      if (hoverTweenRef.current) hoverTweenRef.current.kill();
+      if (rotationTweenRef.current) rotationTweenRef.current.kill();
+    } catch (e) {
+      console.warn("LandmarkMarker: failed to reset hover tweens", e);
+    }
+
+    if (resetScale) {
+      obj.scale.setScalar(0.001);
+    }
+
+    hoverTweenRef.current = gsap.to(obj.scale, {
+      x: objectScale,
+      y: objectScale,
+      z: objectScale,
+      duration: 0.6,
+      ease: "power3.out",
+    });
+
+    rotationTweenRef.current = gsap.to(obj.rotation, {
+      y: Math.PI * 2,
+      duration: 6,
+      ease: "linear",
+      repeat: -1,
+    });
+  }, [objectScale]);
 
   // When a cloned scene appears, run its intro animation (scale up + start rotation)
-  useEffect(() => {
-    if (!clonedScene) return;
+  useLayoutEffect(() => {
+    if (!clonedScene || !hoverActive) return;
 
-    // small timeout to ensure primitive is mounted and ref assigned
-    const t = setTimeout(() => {
-      const obj = modelRef.current;
+    runHoverAnimations(true);
+  }, [clonedScene, hoverActive, runHoverAnimations]);
+
+  const labelContent = hoverActive && clonedScene ? "" : index;
+
+  const getWorldPositionArray = () => {
+    const pos = getMarkerWorldPosition();
+    if (!pos) return null;
+    return pos.toArray();
+  };
+
+  const registerLabelHitbox = useCallback(
+    (obj) => {
       if (!obj) return;
+      obj.userData.getMarkerCenter = getMarkerWorldPosition;
+      obj.userData.isLabelHitbox = true;
+    },
+    [getMarkerWorldPosition]
+  );
 
-      try {
-        if (hoverTweenRef.current) hoverTweenRef.current.kill();
-        if (rotationTweenRef.current) rotationTweenRef.current.kill();
-      } catch (e) {}
+  const computeCenterScore = useCallback((object, point) => {
+    if (!object || !point) return null;
+    const getter = object.userData?.getMarkerCenter;
+    if (typeof getter !== "function") return null;
+    const center = getter();
+    if (!center) return null;
+    return center.distanceTo(point);
+  }, []);
 
-      // start from tiny scale
-      obj.scale.setScalar(0.001);
+  const shouldHandlePointer = useCallback(
+    (event) => {
+      const hits = event?.intersections;
+      if (!Array.isArray(hits) || hits.length === 0) return true;
+      let bestObject = null;
+      let bestScore = Infinity;
+      for (const hit of hits) {
+        const score = computeCenterScore(hit.object, hit.point);
+        if (score == null) continue;
+        if (score < bestScore) {
+          bestScore = score;
+          bestObject = hit.object;
+        }
+      }
+      if (!bestObject) return true;
+      return bestObject === event.eventObject;
+    },
+    [computeCenterScore]
+  );
 
-      hoverTweenRef.current = gsap.to(obj.scale, {
-        x: 1,
-        y: 1,
-        z: 1,
-        duration: 0.6,
-        ease: "power3.out",
-      });
+  const ensureHoverActive = useCallback(() => {
+    activeRef.current = true;
+    startLoad();
+    if (clonedScene) {
+      runHoverAnimations(false);
+    }
+  }, [clonedScene, runHoverAnimations, startLoad]);
 
-      // continuous slow rotation while hovered/active
-      rotationTweenRef.current = gsap.to(obj.rotation, {
-        y: Math.PI * 2,
-        duration: 6,
-        ease: "linear",
-        repeat: -1,
-      });
-    }, 0);
+  const handlePointerEnter = (event) => {
+    if (!shouldHandlePointer(event)) return;
+    event.stopPropagation();
+    setHovered(true);
+    ensureHoverActive();
+  };
 
-    return () => clearTimeout(t);
-  }, [clonedScene]);
+  const handlePointerLeave = (event) => {
+    event.stopPropagation();
+    setHovered(false);
+    if (!externallyHovered) {
+      stopAndUnload();
+    }
+  };
+
+  const handleClick = (event) => {
+    event.stopPropagation();
+    onSelect?.(landmark, getWorldPositionArray());
+  };
+
+  useEffect(() => {
+    if (externallyHovered) {
+      ensureHoverActive();
+      return;
+    }
+
+    if (!hovered) {
+      stopAndUnload();
+    }
+  }, [externallyHovered, hovered, ensureHoverActive, stopAndUnload]);
 
   if (!position) return null;
 
   return (
-    <group ref={markerRef} position={position}>
-      {/* Show a visible label/placeholder when model is not loaded. Hovering
-          the label triggers load; the label hides once the model is loaded. */}
-      <Text
-        color="#ffffff"
-        fontSize={0.28}
-        maxWidth={2}
-        anchorX="center"
-        anchorY="middle"
-        ref={textRef}
-        onClick={(event) => {
-          event.stopPropagation();
-          const worldPos = markerRef.current
-            ? markerRef.current.getWorldPosition(new Vector3()).toArray()
-            : null;
-          onSelect?.(landmark, worldPos);
-        }}
-        onPointerOver={(event) => {
-          event.stopPropagation();
-          setHovered(true);
-          startLoad();
-        }}
-        onPointerOut={() => stopAndUnload()}
-        position={[0, 0.6, 0]}
-        // keep text facing camera
-        rotation={[0, 0, 0]}
-      >
-        {index}
-      </Text>
-
-      {/* Render model when loaded; pointer handlers on the primitive */}
-      {clonedScene && (
-        <primitive
-          ref={modelRef}
-          object={clonedScene}
-          onClick={(event) => {
-            event.stopPropagation();
-            const worldPos = markerRef.current
-              ? markerRef.current.getWorldPosition(new Vector3()).toArray()
-              : null;
-            onSelect?.(landmark, worldPos);
-          }}
-          onPointerOver={(event) => {
-            event.stopPropagation();
-            setHovered(true);
-            activeRef.current = true;
-          }}
-          onPointerOut={() => stopAndUnload()}
-        />
-      )}
-
-      {/* Invisible larger hitbox so hover/click is easier on small models */}
-      <mesh
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, 0.02, 0]}
-        onClick={(event) => {
-          event.stopPropagation();
-          const worldPos = markerRef.current
-            ? markerRef.current.getWorldPosition(new Vector3()).toArray()
-            : null;
-          onSelect?.(landmark, worldPos);
-        }}
-        onPointerOver={(event) => {
-          event.stopPropagation();
-          setHovered(true);
-          startLoad();
-          activeRef.current = true;
-        }}
-        onPointerOut={() => stopAndUnload()}
-      >
-        <circleGeometry args={[LANDMARK_RING_OUTER * 2.2, 32]} />
-        <meshBasicMaterial transparent opacity={0} />
-      </mesh>
-
-      {showRing && (
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
-          <ringGeometry args={[LANDMARK_RING_INNER, LANDMARK_RING_OUTER, 48]} />
-          <meshBasicMaterial
-            color="#fbbf24"
-            transparent
-            opacity={hovered ? 0.9 : 0.6}
+    <group ref={markerRef} position={position} onClick={handleClick}>
+      <Billboard position={[0, labelY, 0]}>
+        <mesh
+          ref={registerLabelHitbox}
+          onClick={handleClick}
+          onPointerEnter={handlePointerEnter}
+          onPointerLeave={handlePointerLeave}
+        >
+          <planeGeometry
+            args={[LANDMARK_LABEL_HITBOX_WIDTH, LANDMARK_LABEL_HITBOX_HEIGHT]}
           />
+          <meshBasicMaterial transparent opacity={0} />
         </mesh>
+        <Text
+          color="#ffffff"
+          fontSize={LANDMARK_LABEL_FONT_SIZE}
+          maxWidth={2}
+          anchorX="center"
+          anchorY="middle"
+          position={[0, 0, 0.01]}
+          raycast={DISABLE_TEXT_RAYCAST}
+        >
+          {labelContent}
+        </Text>
+      </Billboard>
+
+      {clonedScene && (
+        <group ref={modelRef} scale={[0.0001, 0.0001, 0.0001]}>
+          <primitive object={clonedScene} />
+        </group>
       )}
     </group>
   );

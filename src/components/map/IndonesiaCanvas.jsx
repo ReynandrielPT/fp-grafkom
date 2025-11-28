@@ -25,6 +25,7 @@ function IndonesiaCanvas({
   onLandmarkSelect,
   flyRequest,
   onPlaneAnimationComplete,
+  hoveredLandmarkId,
 }) {
   const containerClassName = ["relative", className].filter(Boolean).join(" ");
 
@@ -44,6 +45,7 @@ function IndonesiaCanvas({
           onLandmarkSelect={onLandmarkSelect}
           flyRequest={flyRequest}
           onPlaneAnimationComplete={onPlaneAnimationComplete}
+          hoveredLandmarkId={hoveredLandmarkId}
         />
       </Canvas>
     </div>

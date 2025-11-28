@@ -12,6 +12,7 @@ function App() {
   const [pendingFly, setPendingFly] = useState(null);
   const [lastClickedPos, setLastClickedPos] = useState(null);
   const [lastClickedLandmark, setLastClickedLandmark] = useState(null);
+  const [hoveredLandmarkId, setHoveredLandmarkId] = useState(null);
 
   const openGuide = () => {
     localStorage.removeItem("hasSeenGuide");
@@ -72,6 +73,10 @@ function App() {
     setOverlayOpen(true);
   };
 
+  const handleListHoverChange = (landmark) => {
+    setHoveredLandmarkId(landmark?.id ?? null);
+  };
+
   // initialize lastClickedLandmark to Monas if available so first-click
   // flights use Monas as origin for island comparisons
   useEffect(() => {
@@ -111,9 +116,15 @@ function App() {
         onLandmarkSelect={handleLandmarkSelect}
         flyRequest={pendingFly}
         onPlaneAnimationComplete={handlePlaneAnimationComplete}
+        hoveredLandmarkId={hoveredLandmarkId}
       />
 
-      <LandmarkList landmarks={landmarks} onSelect={handleLandmarkSelect} />
+      <LandmarkList
+        landmarks={landmarks}
+        onSelect={handleLandmarkSelect}
+        onHoverChange={handleListHoverChange}
+        activeLandmarkId={hoveredLandmarkId}
+      />
 
       {overlayOpen && overlayLandmark && (
         <MonumentOverlay
