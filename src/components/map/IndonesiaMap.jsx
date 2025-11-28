@@ -1,22 +1,24 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useGLTF } from "@react-three/drei";
 import { Box3 } from "three";
-import { INDONESIA_MAP_ROTATION, INDONESIA_MAP_SCALE } from "../const";
+import { INDONESIA_MAP } from "../../config/mapConfig";
 import { resolveAssetPath } from "../../utils/assets";
 
 useGLTF.preload(resolveAssetPath("model/indonesia.glb"));
 
+/**
+ * IndonesiaMap Component
+ * Renders the 3D model of Indonesia and reports its boundaries
+ * 
+ * @param {Function} onBoundsReady - Callback with map boundaries once loaded
+ */
 function IndonesiaMap({ onBoundsReady }) {
   const groupRef = useRef();
   const { scene } = useGLTF(resolveAssetPath("model/indonesia.glb"));
   const clonedScene = useMemo(() => {
     const cloned = scene.clone(true);
-    cloned.rotation.set(...INDONESIA_MAP_ROTATION);
-    cloned.scale.set(
-      INDONESIA_MAP_SCALE,
-      INDONESIA_MAP_SCALE,
-      INDONESIA_MAP_SCALE
-    );
+    cloned.rotation.set(...INDONESIA_MAP.ROTATION);
+    cloned.scale.setScalar(INDONESIA_MAP.SCALE);
     return cloned;
   }, [scene]);
 

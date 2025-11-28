@@ -1,8 +1,11 @@
 import { resolveAssetPath } from "../utils/assets";
-import { DEFAULT_LANDMARKS_SCALE } from "../components/const";
+import { LANDMARK } from "../config/mapConfig";
 
+/**
+ * Helper functions for landmark data
+ */
 const model = (file) => resolveAssetPath(`model/${file}`);
-const scaled = (multiplier = 1) => DEFAULT_LANDMARKS_SCALE * multiplier;
+const scaled = (multiplier = 1) => LANDMARK.DEFAULT_SCALE * multiplier;
 
 const baseLandmarks = [
   { // 1

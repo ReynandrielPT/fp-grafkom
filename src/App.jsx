@@ -2,9 +2,15 @@ import { useEffect, useState } from "react";
 import InitialGuide from "./components/ui/InitialGuide";
 import IndonesiaCanvas from "./components/map/IndonesiaCanvas";
 import MonumentOverlay from "./components/overlays/MonumentOverlay";
-import { landmarks } from "./data/landmarks";
+import LoadingScreen from "./components/ui/LoadingScreen";
 import LandmarkList from "./components/ui/LandmarkList";
+import { landmarks } from "./data/landmarks";
+import { isSamePosition } from "./utils/coordinateUtils";
 
+/**
+ * App Component
+ * Main application container managing state and UI interactions
+ */
 function App() {
   const [showGuide, setShowGuide] = useState(undefined);
   const [overlayOpen, setOverlayOpen] = useState(false);
@@ -13,17 +19,12 @@ function App() {
   const [lastClickedPos, setLastClickedPos] = useState(null);
   const [lastClickedLandmark, setLastClickedLandmark] = useState(null);
   const [hoveredLandmarkId, setHoveredLandmarkId] = useState(null);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   const openGuide = () => {
     localStorage.removeItem("hasSeenGuide");
     setShowGuide(true);
-  };
-
-  const isSamePosition = (pos1, pos2) => {
-    if (!pos1 || !pos2 || pos1.length !== 3 || pos2.length !== 3) return false;
-    return Math.abs(pos1[0] - pos2[0]) < 0.001 &&
-           Math.abs(pos1[1] - pos2[1]) < 0.001 &&
-           Math.abs(pos1[2] - pos2[2]) < 0.001;
   };
 
   const handleLandmarkSelect = (landmark, worldPos) => {
@@ -66,6 +67,14 @@ function App() {
     setOverlayOpen(true);
   };
 
+  const handleLoadingProgress = (progress) => {
+    setLoadingProgress(progress);
+    if (progress >= 100) {
+      // Add a small delay before hiding loading screen for smooth transition
+      setTimeout(() => setIsLoading(false), 500);
+    }
+  };
+
   // initialize lastClickedLandmark to Monas if available so first-click
   // flights use Monas as origin for island comparisons
   useEffect(() => {
@@ -78,6 +87,8 @@ function App() {
 
   return (
     <>
+      <LoadingScreen progress={loadingProgress} isComplete={!isLoading} />
+      
       <InitialGuide show={showGuide} onClose={() => setShowGuide(false)} />
 
       <div className="fixed left-4 top-4 z-50 pointer-events-none">
@@ -104,6 +115,7 @@ function App() {
         flyRequest={pendingFly}
         onPlaneAnimationComplete={handlePlaneAnimationComplete}
         hoveredLandmarkId={hoveredLandmarkId}
+        onLoadingProgress={handleLoadingProgress}
       />
 
       <LandmarkList
