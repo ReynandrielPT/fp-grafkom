@@ -2,9 +2,15 @@ import { useEffect, useState } from "react";
 import InitialGuide from "./components/ui/InitialGuide";
 import IndonesiaCanvas from "./components/map/IndonesiaCanvas";
 import MonumentOverlay from "./components/overlays/MonumentOverlay";
-import { landmarks } from "./data/landmarks";
+import LoadingScreen from "./components/ui/LoadingScreen";
 import LandmarkList from "./components/ui/LandmarkList";
+import { landmarks } from "./data/landmarks";
+import { isSamePosition } from "./utils/coordinateUtils";
 
+/**
+ * App Component
+ * Main application container managing state and UI interactions
+ */
 function App() {
   const [showGuide, setShowGuide] = useState(undefined);
   const [overlayOpen, setOverlayOpen] = useState(false);
@@ -12,6 +18,9 @@ function App() {
   const [pendingFly, setPendingFly] = useState(null);
   const [lastClickedPos, setLastClickedPos] = useState(null);
   const [lastClickedLandmark, setLastClickedLandmark] = useState(null);
+  const [hoveredLandmarkId, setHoveredLandmarkId] = useState(null);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   const openGuide = () => {
     localStorage.removeItem("hasSeenGuide");
@@ -22,31 +31,17 @@ function App() {
     if (!landmark) return;
     // ignore plane or unspecified models
     const uri = String(landmark.modelUri ?? "").toLowerCase();
-    if (
-      uri.includes("plane") ||
-      uri.includes("/2.glb") ||
-      uri.endsWith("/2.glb")
-    )
-      return;
+    if (uri.includes("plane") || uri.includes("/2.glb") || uri.endsWith("/2.glb")) return;
 
     // if an animation is pending, ignore additional clicks
     if (pendingFly) return;
 
     // if clicked the same spot as last time, open overlay immediately (no animation)
-
-    if (
-      lastClickedPos &&
-      worldPos &&
-      lastClickedPos.length === 3 &&
-      Math.abs(lastClickedPos[0] - worldPos[0]) < 0.001 &&
-      Math.abs(lastClickedPos[1] - worldPos[1]) < 0.001 &&
-      Math.abs(lastClickedPos[2] - worldPos[2]) < 0.001
-    ) {
+    if (isSamePosition(lastClickedPos, worldPos)) {
       setOverlayLandmark(landmark);
       setOverlayOpen(true);
-      // ensure we remember which landmark was last opened
       setLastClickedLandmark(landmark);
-      if (worldPos && worldPos.length === 3) setLastClickedPos(worldPos);
+      if (worldPos) setLastClickedPos(worldPos);
       return;
     }
     // request fly animation from scene; include origin landmark so Scene
@@ -72,20 +67,28 @@ function App() {
     setOverlayOpen(true);
   };
 
+  const handleLoadingProgress = (progress) => {
+    setLoadingProgress(progress);
+    if (progress >= 100) {
+      // Add a small delay before hiding loading screen for smooth transition
+      setTimeout(() => setIsLoading(false), 500);
+    }
+  };
+
   // initialize lastClickedLandmark to Monas if available so first-click
   // flights use Monas as origin for island comparisons
   useEffect(() => {
     if (lastClickedLandmark) return;
     const monas = landmarks.find((l) =>
-      String(l?.modelUri ?? "")
-        .toLowerCase()
-        .includes("monas")
+      String(l?.modelUri ?? "").toLowerCase().includes("monas")
     );
     if (monas) setLastClickedLandmark(monas);
   }, [lastClickedLandmark]);
 
   return (
     <>
+      <LoadingScreen progress={loadingProgress} isComplete={!isLoading} />
+      
       <InitialGuide show={showGuide} onClose={() => setShowGuide(false)} />
 
       <div className="fixed left-4 top-4 z-50 pointer-events-none">
@@ -111,18 +114,23 @@ function App() {
         onLandmarkSelect={handleLandmarkSelect}
         flyRequest={pendingFly}
         onPlaneAnimationComplete={handlePlaneAnimationComplete}
+        hoveredLandmarkId={hoveredLandmarkId}
+        onLoadingProgress={handleLoadingProgress}
       />
 
-      <LandmarkList landmarks={landmarks} onSelect={handleLandmarkSelect} />
+      <LandmarkList
+        landmarks={landmarks}
+        onSelect={handleLandmarkSelect}
+        onHoverChange={(landmark) => setHoveredLandmarkId(landmark?.id ?? null)}
+        activeLandmarkId={hoveredLandmarkId}
+      />
 
       {overlayOpen && overlayLandmark && (
         <MonumentOverlay
           open={overlayOpen}
           onClose={() => setOverlayOpen(false)}
           pageMode
-          modelUri={overlayLandmark.modelUri}
-          title={overlayLandmark.name}
-          description={overlayLandmark.description}
+          landmark={overlayLandmark}
         />
       )}
     </>
