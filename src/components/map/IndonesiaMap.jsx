@@ -28,7 +28,11 @@ function IndonesiaMap({ onBoundsReady }) {
     onBoundsReady?.(bounds.clone());
   }, [clonedScene, onBoundsReady]);
 
-  return <primitive ref={groupRef} object={clonedScene} />;
+  return (
+    <group ref={groupRef} position={[0, INDONESIA_MAP.ELEVATION, 0]}>
+      <primitive object={clonedScene} />
+    </group>
+  );
 }
 
 export default IndonesiaMap;
