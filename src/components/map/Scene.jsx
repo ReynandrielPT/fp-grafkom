@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useRef, useState, useMemo } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { OrbitControls, useGLTF, useProgress } from "@react-three/drei";
 import { ORBIT_CONTROLS, LANDMARK } from "../../config/mapConfig";
 import { latLonToWorldPosition, isSamePosition } from "../../utils/coordinateUtils";
@@ -8,6 +8,7 @@ import LandmarkMarker from "./LandmarkMarker";
 import ControlsTarget from "./ControlsTarget";
 import PlaneAnimator from "./PlaneAnimator";
 import TrainAnimator from "./TrainAnimator";
+import WaterSurface from "./WaterSurface";
 import { resolveAssetPath } from "../../utils/assets";
 
 // Preload transport models
@@ -146,24 +147,34 @@ function Scene({
     }
   }, [flyRequest, lastPosRef, onPlaneAnimationComplete]);
 
-  const handleAnimationComplete = (res, setPlay) => {
-    if (res?.targetPos) lastPosRef.current = res.targetPos;
-    setPlay(false);
-    onPlaneAnimationComplete?.(res);
-  };
+  const handleAnimationComplete = useCallback(
+    (res, setPlay) => {
+      if (res?.targetPos) {
+        lastPosRef.current = res.targetPos;
+      }
+      setPlay(false);
+      onPlaneAnimationComplete?.(res);
+    },
+    [lastPosRef, onPlaneAnimationComplete]
+  );
+
+  const handlePlaneComplete = useCallback(
+    (res) => handleAnimationComplete(res, setPlanePlay),
+    [handleAnimationComplete, setPlanePlay]
+  );
+
+  const handleTrainComplete = useCallback(
+    (res) => handleAnimationComplete(res, setTrainPlay),
+    [handleAnimationComplete, setTrainPlay]
+  );
 
   return (
     <>
-      <color attach="background" args={[0.04, 0.07, 0.12]} />
-      <ambientLight intensity={0.5} />
-      <directionalLight
-        position={[8, 12, 6]}
-        intensity={0.8}
-        castShadow={false}
-      />
-      <directionalLight position={[-10, 5, -8]} intensity={0.3} />
+      <color attach="background" args={[0.02, 0.04, 0.07]} />
+      <ambientLight args={[0xffffff, 1]} />
 
       <Suspense fallback={null}>
+        <WaterSurface mapBounds={mapBounds} />
         <IndonesiaMap onBoundsReady={setMapBounds} />
         {activeLandmarks.map((landmark, i) => (
           <LandmarkMarker
@@ -181,13 +192,13 @@ function Scene({
           start={planeStart}
           end={planeEnd}
           play={planePlay}
-          onComplete={(res) => handleAnimationComplete(res, setPlanePlay)}
+          onComplete={handlePlaneComplete}
         />
         <TrainAnimator
           start={trainStart}
           end={trainEnd}
           play={trainPlay}
-          onComplete={(res) => handleAnimationComplete(res, setTrainPlay)}
+          onComplete={handleTrainComplete}
         />
       </Suspense>
 
@@ -198,6 +209,8 @@ function Scene({
         dampingFactor={ORBIT_CONTROLS.DAMPING_FACTOR}
         minDistance={ORBIT_CONTROLS.MIN_DISTANCE}
         maxDistance={ORBIT_CONTROLS.MAX_DISTANCE}
+        minPolarAngle={ORBIT_CONTROLS.MIN_POLAR_ANGLE}
+        maxPolarAngle={ORBIT_CONTROLS.MAX_POLAR_ANGLE}
       />
       <ControlsTarget mapBounds={mapBounds} controlsRef={controlsRef} />
     </>

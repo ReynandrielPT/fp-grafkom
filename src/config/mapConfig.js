@@ -6,6 +6,8 @@
 export const INDONESIA_MAP = {
   ROTATION: [-Math.PI / 2, 0, 0],
   SCALE: 60,
+  ELEVATION: 0,
+  COAST_OVERLAP: 0.18,
 };
 
 // Camera Configuration
@@ -18,12 +20,15 @@ export const CAMERA = {
 
 // OrbitControls Configuration
 export const ORBIT_CONTROLS = {
-  MIN_DISTANCE: 2.5,
-  MAX_DISTANCE: 25,
+  MIN_DISTANCE: 1.4,
+  MAX_DISTANCE: 28,
   DAMPING_FACTOR: 0.08,
   MONUMENT_MIN_DISTANCE: 2,
   MONUMENT_MAX_DISTANCE: 40,
+  MIN_POLAR_ANGLE: Math.PI / 6,
+  MAX_POLAR_ANGLE: Math.PI / 2.05,
 };
+
 
 // Landmark Display Configuration
 export const LANDMARK = {

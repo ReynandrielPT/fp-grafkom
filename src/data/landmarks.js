@@ -158,19 +158,19 @@ const baseLandmarks = [
     streetViewUrl: "https://www.google.com/maps/embed?pb=!4v1764687521477!6m8!1m7!1sCAoSHENJQUJJaEFHYndQVGxoQXZNMmUtaWk0QUJsU2o.!2m2!1d1.409282310499514!2d99.72667830943367!3f165.52861!4f0!5f0.7820865974627469",
   },
   // kayaknya bagian dari prambanan, ga ada di wiki/google maps (adanya di lokasi dekat prambanan)
-  {
-    id: "candi-apit",
-    name: "Candi Apit",
-    modelUri: model("candi_apit.glb"),
-    latitude: -0.503333,
-    longitude: 101.41,
-    scale: scaled(0.4),
-    zIndex: 0,
-    description:
-      "Candi Apit is a historic temple site of local significance, representing Indonesia's rich archaeological and cultural landscape.",
-    island: "Sumatra",
-    streetViewUrl: "https://www.google.com/maps/embed?pb=!4v1764335554591!6m8!1m7!1sDgvKbYXg0MEOxB4gWP73Sg!2m2!1d-7.307277722493254!2d112.7800860605329!3f168.73106!4f0!5f0.7820865974627469",
-  },
+  // {
+  //   id: "candi-apit",
+  //   name: "Candi Apit",
+  //   modelUri: model("candi_apit.glb"),
+  //   latitude: -0.503333,
+  //   longitude: 101.41,
+  //   scale: scaled(0.4),
+  //   zIndex: 0,
+  //   description:
+  //     "Candi Apit is a historic temple site of local significance, representing Indonesia's rich archaeological and cultural landscape.",
+  //   island: "Sumatra",
+  //   streetViewUrl: "https://www.google.com/maps/embed?pb=!4v1764335554591!6m8!1m7!1sDgvKbYXg0MEOxB4gWP73Sg!2m2!1d-7.307277722493254!2d112.7800860605329!3f168.73106!4f0!5f0.7820865974627469",
+  // },
 ];
 
 export const landmarks = baseLandmarks.map((landmark, index) => ({
