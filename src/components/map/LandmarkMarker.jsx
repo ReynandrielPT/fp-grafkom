@@ -6,13 +6,25 @@ import {
   useRef,
   useState,
 } from "react";
-import { Billboard, Text, useCursor } from "@react-three/drei";
+import { Billboard, Text, useCursor, useGLTF } from "@react-three/drei";
 import gsap from "gsap";
 import { Box3, MathUtils, Vector3 } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { LANDMARK, COORDINATE_BOUNDS } from "../../config/mapConfig";
+// import { Billboard, Text, useCursor, useGLTF } from "@react-three/drei"; // Tambah useGLTF
+import { useFrame } from "@react-three/fiber";
 
 const DISABLE_TEXT_RAYCAST = () => null;
+
+
+const IDLE_ANIMATION = {
+  FLOAT_SPEED: 2,        
+  FLOAT_AMPLITUDE: 0.05,   
+  HIDE_DISTANCE: 15,     
+  FADE_START_DISTANCE: 100, 
+  BASE_SCALE: 1,
+  BASE_HEIGHT: 0.3,         
+};
 
 /**
  * LandmarkMarker Component
@@ -34,6 +46,11 @@ function LandmarkMarker({
 }) {
   const markerRef = useRef();
   const modelRef = useRef();
+  
+  const pinRef = useRef();
+  // const { scene: pinScene } = useGLTF("model/3d_location.glb");
+  // const pinClone = useMemo(() => pinScene.clone(), [pinScene]);
+
   const [hovered, setHovered] = useState(false);
   const hoverActive = hovered || externallyHovered;
   useCursor(hoverActive);
@@ -314,35 +331,126 @@ function LandmarkMarker({
     }
   }, [externallyHovered, hovered, ensureHoverActive, stopAndUnload]);
 
+  useFrame((state) => {
+    if (!pinRef.current) return;
+
+    if (hoverActive) {
+      pinRef.current.visible = false;
+      return;
+    }
+
+    const currentPos = new Vector3(position[0], position[1], position[2]);
+    const distance = state.camera.position.distanceTo(currentPos);
+
+    if (distance > IDLE_ANIMATION.HIDE_DISTANCE) {
+      pinRef.current.visible = false;
+      return;
+    }
+    
+    pinRef.current.visible = true;
+
+    const time = state.clock.elapsedTime;
+    const offset = index * 0.5; // Agar tidak barengan semua
+
+    const floatY = Math.sin((time + offset) * IDLE_ANIMATION.FLOAT_SPEED) * IDLE_ANIMATION.FLOAT_AMPLITUDE;
+
+    pinRef.current.position.y = floatY + IDLE_ANIMATION.BASE_HEIGHT;
+
+    let scale = 1;
+    if (distance > IDLE_ANIMATION.FADE_START_DISTANCE) {
+      scale = MathUtils.mapLinear(
+        distance, 
+        IDLE_ANIMATION.FADE_START_DISTANCE, 
+        IDLE_ANIMATION.HIDE_DISTANCE, 
+        1, 
+        0
+      );
+      // scale = MathUtils.mapLinear(
+      //       distance, IDLE_ANIMATION.FADE_START_DISTANCE, IDLE_ANIMATION.HIDE_DISTANCE, 1, 0
+      // );
+    }
+    // scale = Math.max(0, scale);
+    pinRef.current.scale.setScalar(Math.max(0, scale) * IDLE_ANIMATION.BASE_SCALE);
+    // pinRef.current.scale.setScalar(IDLE_ANIMATION.BASE_SCALE);
+    // pinRef.current.scale.setScalar(Math.max(0, scale));
+  });
+
   if (!position) return null;
 
   return (
     <group ref={markerRef} position={position} onClick={handleClick}>
-      <Billboard position={[0, labelY, 0]}>
-        <mesh
-          ref={registerLabelHitbox}
-          onClick={handleClick}
-          onPointerEnter={handlePointerEnter}
-          onPointerLeave={handlePointerLeave}
-        >
-          <planeGeometry
-            args={[LANDMARK.LABEL_HITBOX_WIDTH, LANDMARK.LABEL_HITBOX_HEIGHT]}
-          />
-          <meshBasicMaterial transparent opacity={0} />
-        </mesh>
-        <Text
-          color="#ffffff"
-          fontSize={LANDMARK.LABEL_FONT_SIZE}
-          maxWidth={2}
-          anchorX="center"
-          anchorY="middle"
-          position={[0, 0, 0.01]}
-          raycast={DISABLE_TEXT_RAYCAST}
-        >
-          {labelContent}
-        </Text>
-      </Billboard>
+      
+      <mesh
+         ref={registerLabelHitbox}
+         position={[0, 0.3, 0]} 
+         onClick={handleClick}
+         onPointerEnter={handlePointerEnter}
+         onPointerLeave={handlePointerLeave}
+       >
+         <boxGeometry args={[0.2, 0.2, 0.2]} /> 
+         <meshBasicMaterial 
+            transparent 
+            opacity={0} 
+            wireframe={false} 
+            depthWrite={false}
+         />
+      </mesh>
 
+      {!clonedScene && (
+        <group ref={pinRef}>
+          {/* Billboard: Agar lingkaran selalu menghadap user */}
+          <Billboard follow={true} lockX={false} lockY={false} lockZ={false}>
+            
+            {/* 1. Lingkaran Hitam Transparan */}
+            <mesh position={[0, 0, 0]}>
+              {/* Radius 0.5 (cukup besar), Segments 32 (halus) */}
+              <circleGeometry args={[0.05, 32]} />
+              <meshBasicMaterial 
+                color="#000000" 
+                transparent 
+                opacity={0.6} 
+                depthTest={false}
+                depthWrite={false} 
+              />
+            </mesh>
+
+            <mesh position={[0, 0, 0]} renderOrder={1}>
+              {/* args: [innerRadius, outerRadius, segments]
+                  inner: 0.05 (sama kayak lingkaran hitam)
+                  outer: 0.055 (lebih besar sedikit untuk ketebalan garis)
+               */}
+              <ringGeometry args={[0.05, 0.055, 32]} /> 
+              <meshBasicMaterial 
+                color="#ffffff" 
+                transparent
+                opacity={0.8}
+                depthTest={false}
+                depthWrite={false}
+                side={2} // DoubleSide agar aman
+              />
+            </mesh>
+
+            {/* 2. Teks Angka Putih */}
+            <Text
+              position={[0, 0, 0]} // Sedikit di depan lingkaran
+              fontSize={0.05}
+              fontWeight="bold"
+              color="white"
+              anchorX="center"
+              anchorY="middle"
+            
+              renderOrder={2}     
+              depthTest={false}   
+              depthWrite={false}
+            >
+
+              {index + 1}
+            </Text>
+
+          </Billboard>
+        </group>
+        
+      )}
       {clonedScene && (
         <group ref={modelRef} scale={[0.0001, 0.0001, 0.0001]}>
           <primitive object={clonedScene} />
