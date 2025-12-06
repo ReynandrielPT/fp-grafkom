@@ -1,11 +1,18 @@
 import { useFrame } from "@react-three/fiber";
 import { useTexture } from "@react-three/drei";
 import { useMemo } from "react";
-import { PlaneGeometry, RepeatWrapping, Vector3, NormalBlending, Color } from "three";
+import {
+  PlaneGeometry,
+  RepeatWrapping,
+  Vector3,
+  NormalBlending,
+  Color,
+} from "three";
 import { Water } from "three/examples/jsm/objects/Water.js";
 
-const WATER_NORMALS_URL = "https://threejs.org/examples/textures/waternormals.jpg";
-const SUN_DIRECTION = new Vector3(0, 1, 0);
+const WATER_NORMALS_URL =
+  "https://threejs.org/examples/textures/waternormals.jpg";
+const SUN_DIRECTION = new Vector3(0.6, 1, 0.4);
 
 /**
  * WaterSurface Component
@@ -30,7 +37,7 @@ function WaterSurface({ mapBounds }) {
     mapBounds.getSize(size);
     mapBounds.getCenter(center);
 
-    const expansion = 2.5; 
+    const expansion = 2.5;
     const width = Math.max(size.x * expansion, 1200);
     const depth = Math.max(size.z * expansion, 1200);
     // Align the water base with the map's base
@@ -50,9 +57,11 @@ function WaterSurface({ mapBounds }) {
       textureHeight: 512,
       waterNormals,
       sunDirection: SUN_DIRECTION.clone().normalize(),
-      sunColor: 0x000000,
-      waterColor: "#000916",
-      distortionScale: 0.12,
+      // Use a neutral/cool sun color to avoid brown tint
+      sunColor: 0xd6ecff,
+      // Warm, blueish water color
+      waterColor: "#0b3d5e",
+      distortionScale: 0.08,
       fog: true,
     });
     instance.rotation.x = -Math.PI / 2;
@@ -68,13 +77,13 @@ function WaterSurface({ mapBounds }) {
         if (uniforms.sunColor) {
           const sunUniform = uniforms.sunColor.value;
           if (sunUniform instanceof Color) {
-            sunUniform.set(0x000000);
+            sunUniform.set(0xd6ecff);
           } else {
-            uniforms.sunColor.value = 0x000000;
+            uniforms.sunColor.value = 0xd6ecff;
           }
         }
-        if (uniforms.distortionScale) uniforms.distortionScale.value = 0.12;
-        if (uniforms.reflectivity) uniforms.reflectivity.value = 0;
+        if (uniforms.distortionScale) uniforms.distortionScale.value = 0.08;
+        if (uniforms.reflectivity) uniforms.reflectivity.value = 0.2;
       }
       material.transparent = false;
       material.opacity = 1;

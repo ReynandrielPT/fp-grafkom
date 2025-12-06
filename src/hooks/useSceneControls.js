@@ -51,7 +51,7 @@ export function useKeyboardControls(controlsRef) {
     if (!pressed.size) return;
 
     const { forward, right, move, up } = moveVectorsRef.current;
-    
+
     // Get camera forward direction
     state.camera.getWorldDirection(forward);
     forward.y = 0;

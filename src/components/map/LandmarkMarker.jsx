@@ -16,21 +16,20 @@ import { useFrame } from "@react-three/fiber";
 
 const DISABLE_TEXT_RAYCAST = () => null;
 
-
 const IDLE_ANIMATION = {
-  FLOAT_SPEED: 2,        
-  FLOAT_AMPLITUDE: 0.05,   
-  HIDE_DISTANCE: 15,     
-  FADE_START_DISTANCE: 100, 
+  FLOAT_SPEED: 2,
+  FLOAT_AMPLITUDE: 0.05,
+  HIDE_DISTANCE: 15,
+  FADE_START_DISTANCE: 100,
   BASE_SCALE: 1,
-  BASE_HEIGHT: 0.3,         
+  BASE_HEIGHT: 0.3,
 };
 
 /**
  * LandmarkMarker Component
  * Renders a 3D marker with label for a landmark on the map
  * Shows model on hover with smooth animations
- * 
+ *
  * @param {Object} mapBounds - Map boundaries for positioning
  * @param {Object} landmark - Landmark data object
  * @param {Function} onSelect - Callback when landmark is clicked
@@ -43,10 +42,11 @@ function LandmarkMarker({
   onSelect,
   index,
   externallyHovered = false,
+  onModelReady,
 }) {
   const markerRef = useRef();
   const modelRef = useRef();
-  
+
   const pinRef = useRef();
   // const { scene: pinScene } = useGLTF("model/3d_location.glb");
   // const pinClone = useMemo(() => pinScene.clone(), [pinScene]);
@@ -76,7 +76,7 @@ function LandmarkMarker({
       // kill any running tweens first
       hoverTweenRef.current?.kill();
       rotationTweenRef.current?.kill();
-      
+
       obj.traverse((child) => {
         if (child.isMesh) {
           child.geometry?.dispose();
@@ -84,7 +84,7 @@ function LandmarkMarker({
             const disposeMaterial = (mat) => {
               if (!mat) return;
               // dispose textures
-              Object.values(mat).forEach(value => {
+              Object.values(mat).forEach((value) => {
                 if (value?.isTexture) value.dispose();
               });
               mat.dispose?.();
@@ -128,12 +128,7 @@ function LandmarkMarker({
       LANDMARK.GLOBAL_Y_OFFSET;
 
     return [x, y, z];
-  }, [
-    landmark.latitude,
-    landmark.longitude,
-    landmark.zIndex,
-    mapBounds,
-  ]);
+  }, [landmark.latitude, landmark.longitude, landmark.zIndex, mapBounds]);
 
   const labelY = LANDMARK.LABEL_HEIGHT;
 
@@ -212,38 +207,45 @@ function LandmarkMarker({
     }
   }, [clonedScene, disposeScene]);
 
-  const runHoverAnimations = useCallback((resetScale = false) => {
-    const obj = modelRef.current;
-    if (!obj) return;
+  const runHoverAnimations = useCallback(
+    (resetScale = false) => {
+      const obj = modelRef.current;
+      if (!obj) return;
 
-    hoverTweenRef.current?.kill();
-    rotationTweenRef.current?.kill();
+      hoverTweenRef.current?.kill();
+      rotationTweenRef.current?.kill();
 
-    if (resetScale) {
-      obj.scale.setScalar(0.001);
-    }
+      if (resetScale) {
+        obj.scale.setScalar(0.001);
+      }
 
-    hoverTweenRef.current = gsap.to(obj.scale, {
-      x: objectScale,
-      y: objectScale,
-      z: objectScale,
-      duration: 0.6,
-      ease: "power3.out",
-    });
+      hoverTweenRef.current = gsap.to(obj.scale, {
+        x: objectScale,
+        y: objectScale,
+        z: objectScale,
+        duration: 0.6,
+        ease: "power3.out",
+      });
 
-    rotationTweenRef.current = gsap.to(obj.rotation, {
-      y: Math.PI * 2,
-      duration: 6,
-      ease: "linear",
-      repeat: -1,
-    });
-  }, [objectScale]);
+      rotationTweenRef.current = gsap.to(obj.rotation, {
+        y: Math.PI * 2,
+        duration: 6,
+        ease: "linear",
+        repeat: -1,
+      });
+    },
+    [objectScale]
+  );
 
   // When a cloned scene appears, run its intro animation (scale up + start rotation)
   useLayoutEffect(() => {
     if (!clonedScene || !hoverActive) return;
 
     runHoverAnimations(true);
+    // notify parent that this landmark's model is ready/visible
+    try {
+      onModelReady?.(landmark);
+    } catch {}
   }, [clonedScene, hoverActive, runHoverAnimations]);
 
   const labelContent = hoverActive && clonedScene ? "" : index;
@@ -346,23 +348,25 @@ function LandmarkMarker({
       pinRef.current.visible = false;
       return;
     }
-    
+
     pinRef.current.visible = true;
 
     const time = state.clock.elapsedTime;
     const offset = index * 0.5; // Agar tidak barengan semua
 
-    const floatY = Math.sin((time + offset) * IDLE_ANIMATION.FLOAT_SPEED) * IDLE_ANIMATION.FLOAT_AMPLITUDE;
+    const floatY =
+      Math.sin((time + offset) * IDLE_ANIMATION.FLOAT_SPEED) *
+      IDLE_ANIMATION.FLOAT_AMPLITUDE;
 
     pinRef.current.position.y = floatY + IDLE_ANIMATION.BASE_HEIGHT;
 
     let scale = 1;
     if (distance > IDLE_ANIMATION.FADE_START_DISTANCE) {
       scale = MathUtils.mapLinear(
-        distance, 
-        IDLE_ANIMATION.FADE_START_DISTANCE, 
-        IDLE_ANIMATION.HIDE_DISTANCE, 
-        1, 
+        distance,
+        IDLE_ANIMATION.FADE_START_DISTANCE,
+        IDLE_ANIMATION.HIDE_DISTANCE,
+        1,
         0
       );
       // scale = MathUtils.mapLinear(
@@ -370,7 +374,9 @@ function LandmarkMarker({
       // );
     }
     // scale = Math.max(0, scale);
-    pinRef.current.scale.setScalar(Math.max(0, scale) * IDLE_ANIMATION.BASE_SCALE);
+    pinRef.current.scale.setScalar(
+      Math.max(0, scale) * IDLE_ANIMATION.BASE_SCALE
+    );
     // pinRef.current.scale.setScalar(IDLE_ANIMATION.BASE_SCALE);
     // pinRef.current.scale.setScalar(Math.max(0, scale));
   });
@@ -379,38 +385,36 @@ function LandmarkMarker({
 
   return (
     <group ref={markerRef} position={position} onClick={handleClick}>
-      
       <mesh
-         ref={registerLabelHitbox}
-         position={[0, 0.3, 0]} 
-         onClick={handleClick}
-         onPointerEnter={handlePointerEnter}
-         onPointerLeave={handlePointerLeave}
-       >
-         <boxGeometry args={[0.2, 0.2, 0.2]} /> 
-         <meshBasicMaterial 
-            transparent 
-            opacity={0} 
-            wireframe={false} 
-            depthWrite={false}
-         />
+        ref={registerLabelHitbox}
+        position={[0, 0.3, 0]}
+        onClick={handleClick}
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={handlePointerLeave}
+      >
+        <boxGeometry args={[0.2, 0.2, 0.2]} />
+        <meshBasicMaterial
+          transparent
+          opacity={0}
+          wireframe={false}
+          depthWrite={false}
+        />
       </mesh>
 
       {!clonedScene && (
         <group ref={pinRef}>
           {/* Billboard: Agar lingkaran selalu menghadap user */}
           <Billboard follow={true} lockX={false} lockY={false} lockZ={false}>
-            
             {/* 1. Lingkaran Hitam Transparan */}
             <mesh position={[0, 0, 0]}>
               {/* Radius 0.5 (cukup besar), Segments 32 (halus) */}
               <circleGeometry args={[0.05, 32]} />
-              <meshBasicMaterial 
-                color="#000000" 
-                transparent 
-                opacity={0.6} 
+              <meshBasicMaterial
+                color="#000000"
+                transparent
+                opacity={0.6}
                 depthTest={false}
-                depthWrite={false} 
+                depthWrite={false}
               />
             </mesh>
 
@@ -419,9 +423,9 @@ function LandmarkMarker({
                   inner: 0.05 (sama kayak lingkaran hitam)
                   outer: 0.055 (lebih besar sedikit untuk ketebalan garis)
                */}
-              <ringGeometry args={[0.05, 0.055, 32]} /> 
-              <meshBasicMaterial 
-                color="#ffffff" 
+              <ringGeometry args={[0.05, 0.055, 32]} />
+              <meshBasicMaterial
+                color="#ffffff"
                 transparent
                 opacity={0.8}
                 depthTest={false}
@@ -438,18 +442,14 @@ function LandmarkMarker({
               color="white"
               anchorX="center"
               anchorY="middle"
-            
-              renderOrder={2}     
-              depthTest={false}   
+              renderOrder={2}
+              depthTest={false}
               depthWrite={false}
             >
-
               {index + 1}
             </Text>
-
           </Billboard>
         </group>
-        
       )}
       {clonedScene && (
         <group ref={modelRef} scale={[0.0001, 0.0001, 0.0001]}>

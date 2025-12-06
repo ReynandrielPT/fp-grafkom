@@ -18,7 +18,7 @@ const DEFAULT_LANDMARKS = [
 /**
  * IndonesiaCanvas Component
  * Wrapper for the 3D canvas containing the Indonesia scene
- * 
+ *
  * @param {string} className - CSS classes for the canvas container
  * @param {Array} landmarks - Array of landmark objects to display
  * @param {Function} onLandmarkSelect - Callback when a landmark is selected
@@ -35,6 +35,7 @@ function IndonesiaCanvas({
   onPlaneAnimationComplete,
   hoveredLandmarkId,
   onLoadingProgress,
+  onLandmarkModelReady,
 }) {
   const containerClassName = ["relative", className].filter(Boolean).join(" ");
 
@@ -56,6 +57,7 @@ function IndonesiaCanvas({
           onPlaneAnimationComplete={onPlaneAnimationComplete}
           hoveredLandmarkId={hoveredLandmarkId}
           onLoadingProgress={onLoadingProgress}
+          onLandmarkModelReady={onLandmarkModelReady}
         />
       </Canvas>
     </div>

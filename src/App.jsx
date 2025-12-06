@@ -21,6 +21,8 @@ function App() {
   const [hoveredLandmarkId, setHoveredLandmarkId] = useState(null);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [awaitingAnimationForId, setAwaitingAnimationForId] = useState(null);
+  const [visitedLandmarkIds, setVisitedLandmarkIds] = useState(() => new Set());
 
   const openGuide = () => {
     localStorage.removeItem("hasSeenGuide");
@@ -31,10 +33,28 @@ function App() {
     if (!landmark) return;
     // ignore plane or unspecified models
     const uri = String(landmark.modelUri ?? "").toLowerCase();
-    if (uri.includes("plane") || uri.includes("/2.glb") || uri.endsWith("/2.glb")) return;
+    if (
+      uri.includes("plane") ||
+      uri.includes("/2.glb") ||
+      uri.endsWith("/2.glb")
+    )
+      return;
 
     // if an animation is pending, ignore additional clicks
     if (pendingFly) return;
+
+    // If re-selecting a previously visited landmark from the UI list,
+    // open its overlay immediately without re-running animation.
+    if (visitedLandmarkIds.has(landmark.id)) {
+      setOverlayLandmark(landmark);
+      setOverlayOpen(true);
+      setLastClickedLandmark(landmark);
+      return;
+    }
+
+    // trigger monument pop animation first via hover state
+    setHoveredLandmarkId(landmark.id);
+    setAwaitingAnimationForId(landmark.id);
 
     // if clicked the same spot as last time, open overlay immediately (no animation)
     if (isSamePosition(lastClickedPos, worldPos)) {
@@ -44,11 +64,15 @@ function App() {
       if (worldPos) setLastClickedPos(worldPos);
       return;
     }
-    // request fly animation from scene; include origin landmark so Scene
-    // can decide whether to use a train (same island) or plane (different islands)
+    // actual animation will start when model signals ready (via callback)
+  };
+
+  const handleLandmarkModelReady = (landmark) => {
+    if (!landmark || landmark.id !== awaitingAnimationForId) return;
+    setAwaitingAnimationForId(null);
     setPendingFly({
       landmark,
-      targetPos: worldPos,
+      targetPos: null,
       originLandmark: lastClickedLandmark,
     });
   };
@@ -63,6 +87,12 @@ function App() {
       setOverlayLandmark(pendingFly.landmark);
       // remember which landmark was landed on
       setLastClickedLandmark(pendingFly.landmark);
+      // mark as visited so future clicks open overlay immediately
+      setVisitedLandmarkIds((prev) => {
+        const next = new Set(prev);
+        next.add(pendingFly.landmark.id);
+        return next;
+      });
     }
     setOverlayOpen(true);
   };
@@ -80,7 +110,9 @@ function App() {
   useEffect(() => {
     if (lastClickedLandmark) return;
     const monas = landmarks.find((l) =>
-      String(l?.modelUri ?? "").toLowerCase().includes("monas")
+      String(l?.modelUri ?? "")
+        .toLowerCase()
+        .includes("monas")
     );
     if (monas) setLastClickedLandmark(monas);
   }, [lastClickedLandmark]);
@@ -88,7 +120,7 @@ function App() {
   return (
     <>
       <LoadingScreen progress={loadingProgress} isComplete={!isLoading} />
-      
+
       <InitialGuide show={showGuide} onClose={() => setShowGuide(false)} />
 
       <div className="fixed left-4 top-4 z-50 pointer-events-none">
@@ -116,6 +148,7 @@ function App() {
         onPlaneAnimationComplete={handlePlaneAnimationComplete}
         hoveredLandmarkId={hoveredLandmarkId}
         onLoadingProgress={handleLoadingProgress}
+        onLandmarkModelReady={handleLandmarkModelReady}
       />
 
       <LandmarkList

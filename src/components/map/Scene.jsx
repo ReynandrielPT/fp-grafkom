@@ -1,8 +1,21 @@
-import { Suspense, useCallback, useEffect, useRef, useState, useMemo } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useMemo,
+} from "react";
 import { OrbitControls, useGLTF, useProgress } from "@react-three/drei";
 import { ORBIT_CONTROLS, LANDMARK } from "../../config/mapConfig";
-import { latLonToWorldPosition, isSamePosition } from "../../utils/coordinateUtils";
-import { useKeyboardControls, useTransportAnimation } from "../../hooks/useSceneControls";
+import {
+  latLonToWorldPosition,
+  isSamePosition,
+} from "../../utils/coordinateUtils";
+import {
+  useKeyboardControls,
+  useTransportAnimation,
+} from "../../hooks/useSceneControls";
 import IndonesiaMap from "./IndonesiaMap";
 import LandmarkMarker from "./LandmarkMarker";
 import ControlsTarget from "./ControlsTarget";
@@ -19,7 +32,7 @@ useGLTF.preload(resolveAssetPath("model/rail.glb"));
 /**
  * Scene Component
  * Main 3D scene containing the Indonesia map, landmarks, and transport animations
- * 
+ *
  * @param {Array} landmarks - Array of landmark objects
  * @param {Function} onLandmarkSelect - Callback when landmark is selected
  * @param {Object} flyRequest - Request object for flight/train animation
@@ -34,12 +47,13 @@ function Scene({
   onPlaneAnimationComplete,
   hoveredLandmarkId,
   onLoadingProgress,
+  onLandmarkModelReady,
 }) {
   const { progress } = useProgress();
   const [mapBounds, setMapBounds] = useState(null);
   const controlsRef = useRef();
   const { lastPosRef, persistedInitRef } = useTransportAnimation();
-  
+
   const [planePlay, setPlanePlay] = useState(false);
   const [planeStart, setPlaneStart] = useState(null);
   const [planeEnd, setPlaneEnd] = useState(null);
@@ -71,16 +85,35 @@ function Scene({
     }
   }, [progress, onLoadingProgress]);
 
+  // Constrain camera and target to stay above water and move horizontally
+  useEffect(() => {
+    const controls = controlsRef.current;
+    if (!controls) return;
+
+    const clamp = () => {
+      if (!mapBounds) return;
+      const minY = mapBounds.min.y;
+      // Clamp camera and target Y so they don't go below the water plane
+      if (controls.object.position.y < minY) controls.object.position.y = minY;
+      if (controls.target.y < minY) controls.target.y = minY;
+    };
+
+    controls.addEventListener("change", clamp);
+    return () => controls.removeEventListener("change", clamp);
+  }, [mapBounds]);
+
   // Initialize camera position at Monas when map loads
   useEffect(() => {
     if (!mapBounds || persistedInitRef.current) return;
-    
+
     const monas = activeLandmarks.find(
       (l) =>
         l?.id?.toLowerCase().startsWith("monas") ||
-        String(l?.modelUri ?? "").toLowerCase().includes("monas")
+        String(l?.modelUri ?? "")
+          .toLowerCase()
+          .includes("monas")
     );
-    
+
     if (!monas) return;
 
     const position = latLonToWorldPosition(
@@ -99,13 +132,27 @@ function Scene({
   // Handle flight/train animation requests
   useEffect(() => {
     if (!flyRequest) return;
-    
+
     const { landmark, targetPos, originLandmark } = flyRequest;
     const start = lastPosRef.current;
 
+    // Determine effective target position: use provided or compute from landmark
+    let effectiveTarget = targetPos;
+    if (!effectiveTarget && landmark && mapBounds) {
+      effectiveTarget = latLonToWorldPosition(
+        landmark.latitude,
+        landmark.longitude,
+        mapBounds,
+        landmark.zIndex ?? 0
+      );
+    }
+
+    // If we still don't have bounds or target, wait until ready
+    if (!effectiveTarget) return;
+
     // Check if already at target position
-    if (isSamePosition(start, targetPos)) {
-      onPlaneAnimationComplete?.({ targetPos });
+    if (isSamePosition(start, effectiveTarget)) {
+      onPlaneAnimationComplete?.({ targetPos: effectiveTarget });
       return;
     }
 
@@ -121,11 +168,15 @@ function Scene({
       ];
     }
 
-    const fallbackStart = targetPos
-      ? [targetPos[0] - 3, targetPos[1] + 2.5, targetPos[2] - 3]
+    const fallbackStart = effectiveTarget
+      ? [
+          effectiveTarget[0] - 3,
+          effectiveTarget[1] + 2.5,
+          effectiveTarget[2] - 3,
+        ]
       : [0, 2.5, 0];
     const s = start || landmarkLeftStart || fallbackStart;
-    const e = targetPos || [0, 0, 0];
+    const e = effectiveTarget;
 
     // Decide transport type: train for same island, plane for different islands
     const originIsland = originLandmark?.island;
@@ -145,7 +196,7 @@ function Scene({
       setPlaneEnd(e);
       setPlanePlay(true);
     }
-  }, [flyRequest, lastPosRef, onPlaneAnimationComplete]);
+  }, [flyRequest, lastPosRef, onPlaneAnimationComplete, mapBounds]);
 
   const handleAnimationComplete = useCallback(
     (res, setPlay) => {
@@ -171,7 +222,17 @@ function Scene({
   return (
     <>
       <color attach="background" args={[0.02, 0.04, 0.07]} />
-      <ambientLight args={[0xffffff, 1]} />
+      {/* Global soft ambient */}
+      <ambientLight args={[0xffffff, 0.4]} />
+      {/* Cooler hemisphere lighting to avoid yellow tint */}
+      <hemisphereLight args={[0xcfe8ff, 0x1f3a4d, 0.7]} />
+      {/* Neutral directional light (sun) to keep water blue */}
+      <directionalLight
+        position={[100, 200, 100]}
+        intensity={0.9}
+        color={0xf0f6ff}
+        castShadow={false}
+      />
 
       <Suspense fallback={null}>
         <WaterSurface mapBounds={mapBounds} />
@@ -186,6 +247,7 @@ function Scene({
             externallyHovered={Boolean(
               hoveredLandmarkId && landmark.id === hoveredLandmarkId
             )}
+            onModelReady={onLandmarkModelReady}
           />
         ))}
         <PlaneAnimator
@@ -206,6 +268,7 @@ function Scene({
         ref={controlsRef}
         enableDamping
         enablePan
+        screenSpacePanning={false}
         dampingFactor={ORBIT_CONTROLS.DAMPING_FACTOR}
         minDistance={ORBIT_CONTROLS.MIN_DISTANCE}
         maxDistance={ORBIT_CONTROLS.MAX_DISTANCE}
