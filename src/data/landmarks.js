@@ -6,6 +6,7 @@ import { LANDMARK } from "../config/mapConfig";
  */
 const model = (file) => resolveAssetPath(`model/${file}`);
 const scaled = (multiplier = 1) => LANDMARK.DEFAULT_SCALE * multiplier;
+const popup = (multiplier = 1) => LANDMARK.DEFAULT_SCALE * multiplier;
 
 const baseLandmarks = [
   {
@@ -15,7 +16,8 @@ const baseLandmarks = [
     modelUri: model("monas.glb"),
     latitude: -6.175392,
     longitude: 106.827153,
-    scale: scaled(1.8),
+    mapScale: scaled(1.8),
+    popupScale: popup(20),
     zIndex: 0,
     description:
       "Monumen Nasional yang disingkat dengan Monas atau Tugu Monas adalah monumen peringatan setinggi 132 meter, terletak tepat di tengah Lapangan Medan Merdeka, Jakarta Pusat. Monas didirikan untuk mengenang perlawanan dan perjuangan rakyat Indonesia dalam merebut kemerdekaan dari pemerintahan kolonial Kerajaan Belanda. Pembangunan dimulai pada 17 Agustus 1961 di bawah perintah Presiden Soekarno dan diresmikan hingga dibuka untuk umum pada 12 Juli 1975 oleh Presiden Soeharto. Tugu ini dimahkotai lidah api yang dilapisi lembaran emas yang melambangkan semangat perjuangan dari rakyat Indonesia.",
@@ -31,7 +33,8 @@ const baseLandmarks = [
     modelUri: model("candi_prambanan.glb"),
     latitude: -7.852222,
     longitude: 110.491667,
-    scale: scaled(6),
+    mapScale: scaled(6),
+    popupScale: popup(60),
     zIndex: 0,
     description:
       "Candi Prambanan adalah bangunan candi bercorak agama Hindu terbesar di Indonesia yang dibangun pada abad ke-9 Masehi. Candi yang juga disebut sebagai Rara Jonggrang ini dipersembahkan untuk Trimurti, tiga dewa utama Hindu yaitu dewa Brahma sebagai dewa pencipta, dewa Wisnu sebagai dewa pemelihara, dan dewa Siwa sebagai dewa pemusnah. Berdasarkan prasasti Siwagrha nama asli kompleks candi ini adalah Siwagrha, dan memang di garbagriha candi ini bersemayam arca Siwa Mahadewa setinggi tiga meter, karena aliran Syaiwa mengutamakan pemujaan dewa Siwa di candi ini.",
@@ -54,8 +57,10 @@ const baseLandmarks = [
     modelUri: model("borobudur.glb"),
     latitude: -7.607874,
     longitude: 110.203751,
-    // Make Borobudur appear smaller in map pop/animation
-    scale: scaled(0.09),
+    // Map size
+    mapScale: scaled(0.09),
+    // Popup preview size
+    popupScale: popup(1.4),
     zIndex: 0,
     description:
       "Candi Borobudur adalah sebuah candi Buddha yang terletak di Borobudur, Magelang, Jawa Tengah, Indonesia. Candi ini terletak kurang lebih 100 km di sebelah barat daya Semarang, 86 km di sebelah barat Surakarta, dan 40 km di sebelah barat laut Yogyakarta. Candi dengan banyak stupa ini didirikan oleh para penganut agama Buddha Mahayana sekitar tahun 800-an Masehi pada masa pemerintahan wangsa Syailendra. Borobudur adalah candi atau kuil Buddha terbesar di dunia, sekaligus salah satu monumen Buddha terbesar di dunia.",
@@ -71,7 +76,8 @@ const baseLandmarks = [
     // location: Merauke, Papua
     latitude: -8.51,
     longitude: 140.355,
-    scale: scaled(0.4),
+    mapScale: scaled(0.4),
+    popupScale: popup(2.5),
     zIndex: 0,
     description:
       "Monumen Kapsul Waktu Merauke adalah sebuah monumen yang terletak di Merauke, Papua Selatan. Monumen ini dibangun diatas lahan seluas 2,5 hektar (ha) dan menjadi ikon baru di Indonesia Timur. Monumen Kapsul Waktu berisikan impian anak-anak Indonesia dari Sabang sampai Merauke, dan nantinya akan dibuka kembali 70 tahun berikutnya atau tahun 2085. Kapsul waktu tersebut dibawa secara estafet mulai dari Aceh ke seluruh provinsi dan berakhir di Kabupaten Merauke, Provinsi Papua Selatan. Ide pembangunan kapsul waktu berasal dari Presiden Joko Widodo pada HUT ke-70 Kemerdekaan Indonesia tahun 2015.",
@@ -86,7 +92,8 @@ const baseLandmarks = [
     modelUri: model("tugu_katulistiwa_3d.glb"),
     latitude: 0.02618,
     longitude: 109.3425,
-    scale: scaled(0.4),
+    mapScale: scaled(0.4),
+    popupScale: popup(4),
     zIndex: 0,
     description:
       "Tugu Khatulistiwa atau dalam bahasa Inggris : Equator Monument, adalah sebuah bangunan yang berfungsi sebagai penanda area atau titik yang dilewati garis khatulistiwa. Tugu ini juga merupakan salah satu tempat bersejarah yang terdapat di Kalimantan Barat, serta menjadi objek wisata di Kota Pontianak. Selain sebagai tempat wisata, tugu ini berfungsi sebagai sumber pembelajaran karena merupakan lokasi penelitian astronomi dan juga untuk wisata edukasi.",
@@ -101,7 +108,8 @@ const baseLandmarks = [
     modelUri: model("patungsuroboyo.glb"),
     latitude: -7.257472,
     longitude: 112.752088,
-    scale: scaled(0.04),
+    mapScale: scaled(0.04),
+    popupScale: popup(0.6),
     zIndex: 0,
     description:
       "Patung Sura dan Baya adalah ikon paling terkenal dan juga pemandu Kota Surabaya dan Madura. Patung tersebut terdiri dari dua jenis binatang, hiu dan buaya. Patung ini terdapat di tiga tempat di Kota Surabaya dan juga satu di Korea Selatan.",
@@ -116,7 +124,8 @@ const baseLandmarks = [
     modelUri: model("museum_sultan_mahmud_badaruddin_ii.glb"),
     latitude: -2.990934,
     longitude: 104.756371,
-    scale: scaled(0.18),
+    mapScale: scaled(0.18),
+    popupScale: popup(2),
     zIndex: 0,
     description:
       "Museum Sultan Mahmud Badaruddin II adalah museum di kota Palembang, Sumatera Selatan, Indonesia. Museum ini didirikan di bekas bangunan rumah residen kolonial Sumatera Selatan abad ke-19. Bangunan ini juga menjadi gedung dinas pariwisata Palembang.",
@@ -131,7 +140,8 @@ const baseLandmarks = [
     modelUri: model("masjid_raya_sumatera_barat.glb"),
     latitude: -0.947083,
     longitude: 100.417181,
-    scale: scaled(0.04),
+    mapScale: scaled(0.04),
+    popupScale: popup(0.5),
     zIndex: 0,
     description:
       "Masjid Raya Sumatera Barat atau Masjid Raya Syekh Ahmad Khatib Al Minangkabawi terletak di Jalan Chatib Sulaiman, Kota Padang, Sumatera Barat. Pembangunannya diawali peletakan batu pertama pada 21 Desember 2007 dan dinyatakan selesai pada 4 Januari 2019 dengan total biaya sekitar Rp330 miliar. Masjid ini didesain oleh Rizal Muslimin lewat proses sayembara yang diadakan pemerintah daerah pada 2006. Adapun rancang bangun rinci dikerjakan oleh Penta Rekayasa. Total Bangun Persada bertindak sebagai kontraktor pelaksana untuk lima tahap awal pembangunan.",
@@ -146,7 +156,8 @@ const baseLandmarks = [
     modelUri: model("jam_gadang.glb"),
     latitude: -0.3055,
     longitude: 100.3693,
-    scale: scaled(0.2),
+    mapScale: scaled(0.2),
+    popupScale: popup(2),
     zIndex: 0,
     description:
       'Jam Gadang adalah menara jam setinggi 27 meter yang menjadi penanda atau ikon Kota Bukittinggi, Sumatera Barat, Indonesia. Terdapat jam berukuran besar berdiameter 80 cm di empat sisi menara sehingga dinamakan Jam Gadang, sebutan bahasa Minangkabau yang berarti "jam besar".',
@@ -169,7 +180,8 @@ const baseLandmarks = [
     modelUri: model("candi_bahal.glb"),
     latitude: 2.076944,
     longitude: 99.065278,
-    scale: scaled(0.08),
+    mapScale: scaled(0.08),
+    popupScale: popup(1.2),
     zIndex: 0,
     description:
       "Candi Bahal, Biaro Bahal, atau Candi Portibi adalah kompleks candi Buddha aliran Vajrayana yang terletak di Desa Bahal, Kecamatan Padang Bolak, Portibi, Kabupaten Padang Lawas Utara, Sumatera Utara, sekitar 3 jam perjalanan dari Kota Padang Sidempuan atau berjarak sekitar 400 km dari Kota Medan. Candi ini terbuat dari bahan bata merah dan diduga berasal dari sekitar abad ke-11 dan dikaitkan dengan Kerajaan Pannai, salah satu pelabuhan di pesisir Selat Malaka yang ditaklukan dan menjadi bagian dari mandala Sriwijaya. Memiliki tiga bangunan kuno yaitu Biaro Bahal I, II dan III. Saling berhubungan dan terdiri dalam satu garis yang lurus.",

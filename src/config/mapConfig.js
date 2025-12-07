@@ -29,12 +29,11 @@ export const ORBIT_CONTROLS = {
   MAX_POLAR_ANGLE: Math.PI / 2.05,
 };
 
-
 // Landmark Display Configuration
 export const LANDMARK = {
   DEFAULT_SCALE: 0.08,
   GLOBAL_Y_OFFSET: 0.12,
-  LABEL_HEIGHT: 0.10,
+  LABEL_HEIGHT: 0.1,
   LABEL_FONT_SIZE: 0.28,
   LABEL_HITBOX_WIDTH: 0.3,
   LABEL_HITBOX_HEIGHT: 0.8,

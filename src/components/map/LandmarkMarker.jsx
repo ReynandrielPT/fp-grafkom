@@ -65,10 +65,14 @@ function LandmarkMarker({
   const rotationTweenRef = useRef(null);
 
   const objectScale = useMemo(() => {
-    const manualScale = Number(landmark?.scale);
-    if (Number.isFinite(manualScale) && manualScale > 0) return manualScale;
+    // Prefer explicit mapScale for in-map display; fall back to legacy scale; else default
+    const manualMapScale = Number(landmark?.mapScale);
+    if (Number.isFinite(manualMapScale) && manualMapScale > 0)
+      return manualMapScale;
+    const legacyScale = Number(landmark?.scale);
+    if (Number.isFinite(legacyScale) && legacyScale > 0) return legacyScale;
     return LANDMARK.DEFAULT_SCALE;
-  }, [landmark?.scale]);
+  }, [landmark?.mapScale, landmark?.scale]);
 
   const disposeScene = useCallback((obj) => {
     if (!obj) return;
@@ -446,7 +450,7 @@ function LandmarkMarker({
               depthTest={false}
               depthWrite={false}
             >
-              {index + 1}
+              {labelContent}
             </Text>
           </Billboard>
         </group>

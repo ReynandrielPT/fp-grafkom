@@ -105,18 +105,13 @@ function MonumentOverlay({
   const streetViewUrl = landmark?.streetViewUrl;
   const additionalContent = landmark?.additionalContent;
 
-  const isPrambanan =
-    String(effectiveModelUri ?? "").includes("candi_prambanan") ||
-    String(effectiveTitle ?? "").toLowerCase().includes("prambanan");
-  const isMonas =
-    String(effectiveModelUri ?? "").toLowerCase().includes("monas") ||
-    String(effectiveTitle ?? "").toLowerCase().includes("monas");
-  const previewScale = isPrambanan
-    ? MONUMENT_PREVIEW_MODEL_SCALE * 50
-    : isMonas
-      ? MONUMENT_PREVIEW_MODEL_SCALE * 20
+  // Use per-landmark popupScale when provided; otherwise use default constant
+  const popupScaleOverride = Number(landmark?.popupScale);
+  const previewScale =
+    Number.isFinite(popupScaleOverride) && popupScaleOverride > 0
+      ? popupScaleOverride
       : MONUMENT_PREVIEW_MODEL_SCALE;
-  
+
   const [isVisible, setIsVisible] = useState(false);
   const [viewMode, setViewMode] = useState("3d"); // "3d" or "streetview"
   const containerRef = useRef(null);
@@ -195,12 +190,16 @@ function MonumentOverlay({
           className="mx-auto flex h-full max-w-7xl w-full flex-col gap-4"
         >
           <header className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold text-white">{effectiveTitle}</h2>
+            <h2 className="text-2xl font-semibold text-white">
+              {effectiveTitle}
+            </h2>
             <div className="flex items-center gap-2">
               {streetViewUrl && (
                 <button
                   type="button"
-                  onClick={() => setViewMode(viewMode === "3d" ? "streetview" : "3d")}
+                  onClick={() =>
+                    setViewMode(viewMode === "3d" ? "streetview" : "3d")
+                  }
                   className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition"
                 >
                   {viewMode === "3d" ? "Street View" : "3D Model"}
@@ -250,7 +249,9 @@ function MonumentOverlay({
               </p>
               {additionalContent && (
                 <section className="pt-2 border-t border-white/5 text-sm text-white/80">
-                  <h3 className="font-semibold mb-2">{additionalContent.title}</h3>
+                  <h3 className="font-semibold mb-2">
+                    {additionalContent.title}
+                  </h3>
                   {additionalContent.paragraphs.map((paragraph, index) => (
                     <p key={index} className={index > 0 ? "mt-2" : ""}>
                       {paragraph}
@@ -287,7 +288,9 @@ function MonumentOverlay({
           {streetViewUrl && (
             <button
               type="button"
-              onClick={() => setViewMode(viewMode === "3d" ? "streetview" : "3d")}
+              onClick={() =>
+                setViewMode(viewMode === "3d" ? "streetview" : "3d")
+              }
               className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-sm font-medium text-white/90 transition hover:bg-white/20"
             >
               {viewMode === "3d" ? "Street View" : "3D Model"}
@@ -303,7 +306,11 @@ function MonumentOverlay({
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
-          <div className={`${isPrambanan ? "h-96" : "h-72"} overflow-hidden bg-slate-900`}>
+          <div
+            className={`${
+              isPrambanan ? "h-96" : "h-72"
+            } overflow-hidden bg-slate-900`}
+          >
             {viewMode === "3d" ? (
               <PreviewCanvas
                 modelUri={effectiveModelUri}
@@ -324,7 +331,9 @@ function MonumentOverlay({
           </div>
 
           <div className="flex flex-col gap-3 text-white/90">
-            <h2 className="text-2xl font-semibold text-white">{effectiveTitle}</h2>
+            <h2 className="text-2xl font-semibold text-white">
+              {effectiveTitle}
+            </h2>
             <p>
               {effectiveDescription ??
                 "Explore the selected landmark using the 3D viewer."}
