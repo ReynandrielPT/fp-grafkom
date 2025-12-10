@@ -1,29 +1,39 @@
 import { useMemo } from "react";
 import { useGLTF } from "@react-three/drei";
-import { MONUMENT_PREVIEW } from "../../config/mapConfig";
+import Annotation from "./Annotation";
 
-/**
- * MonasPreviewModel Component
- * Renders a cloned 3D model for preview display
- * 
- * @param {string} modelUri - Path to the 3D model file
- * @param {number} modelScale - Scale multiplier for the model
- * @param {Array<number>} modelPosition - Position [x, y, z] for the model
- */
 function MonasPreviewModel({
   modelUri,
-  modelScale = MONUMENT_PREVIEW.MODEL_SCALE,
-  modelPosition = MONUMENT_PREVIEW.MODEL_POSITION,
+  modelScale = 1, 
+  modelPosition = [0, 0, 0],
+  annotations = [], 
+  activeId, 
+  onSelectAnnotation, 
 }) {
   const { scene } = useGLTF(modelUri);
   const clonedScene = useMemo(() => scene.clone(true), [scene]);
 
   return (
-    <primitive
-      object={clonedScene}
-      scale={modelScale}
-      position={modelPosition}
-    />
+    // PENTING: Scale di group agar Anotasi ikut membesar/mengecil bareng model
+    <group scale={modelScale} position={modelPosition}>
+      <primitive object={clonedScene} />
+      
+      {annotations.map((anno, index) => {
+        const currentId = anno.id || index;
+        return (
+          <Annotation
+            key={currentId}
+            id={currentId}
+            number={index + 1}
+            position={anno.position}
+            title={anno.title}
+            description={anno.description}
+            isOpen={activeId === currentId} 
+            onSelect={onSelectAnnotation}
+          />
+        );
+      })}
+    </group>
   );
 }
 

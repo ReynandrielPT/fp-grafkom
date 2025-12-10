@@ -1,61 +1,119 @@
-import { Suspense, useEffect, useRef } from "react";
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
-import { CAMERA, ORBIT_CONTROLS, MONUMENT_PREVIEW } from "../../config/mapConfig";
+import { Suspense, useRef, useState, useEffect } from "react";
+import { Canvas } from "@react-three/fiber"; 
+import { OrbitControls, Stage, Environment } from "@react-three/drei";
 import MonasPreviewModel from "./MonasPreviewModel";
 
-/**
- * PreviewCanvas Component
- * 3D canvas for rendering monument model previews
- * 
- * @param {string} className - CSS classes for canvas
- * @param {string} modelUri - Path to 3D model file
- * @param {number} modelScale - Scale multiplier for model
- * @param {Array<number>} modelPosition - Position [x, y, z] for model
- */
 function PreviewCanvas({
   className = "w-full h-full",
   modelUri,
-  modelScale,
-  modelPosition,
+  modelScale = 2,
+  annotations = [],
+  environmentPreset = "park",
 }) {
   const controlsRef = useRef();
+  const [activeData, setActiveData] = useState({ id: null, position: null });
 
+  // DETEKSI: Apakah ini Prambanan?
+  const isPrambanan = modelUri && modelUri.toLowerCase().includes("prambanan");
+
+  // STATE: Kontrol Auto-Center
+  const [enableAdjust, setEnableAdjust] = useState(true);
+
+  // Reset saat ganti model
   useEffect(() => {
-    if (controlsRef.current) {
-      controlsRef.current.target.set(0, -0.8, 0);
-      controlsRef.current.update();
+    setActiveData({ id: null, position: null });
+    
+    // LOGIC: Auto-center nyala sebentar (0.8s) lalu mati khusus Prambanan
+    // Agar posisi awal pas, tapi tidak nge-loop saat diklik.
+    if (isPrambanan) {
+      setEnableAdjust(true);
+      const timer = setTimeout(() => {
+        setEnableAdjust(false);
+      }, 800);
+      return () => clearTimeout(timer);
+    } else {
+      setEnableAdjust(true);
     }
-  }, []);
+  }, [modelUri, isPrambanan]);
+
+  const handleAnnotationSelect = (id, worldPosition) => {
+    if (activeData.id === id) {
+      setActiveData({ id: null, position: null });
+      return;
+    }
+    setActiveData({ id, position: worldPosition });
+  };
+
+  const handleCanvasClick = () => {
+    if (activeData.id) {
+      setActiveData({ id: null, position: null });
+    }
+  };
 
   return (
     <Canvas
       className={className}
-      dpr={1}
-      gl={{ antialias: false, powerPreference: "low-power" }}
-      camera={{ 
-        position: CAMERA.MONUMENT_PREVIEW_POSITION, 
-        fov: CAMERA.MONUMENT_PREVIEW_FOV 
-      }}
+      // OPTIMASI LAG:
+      // 1. dpr (pixel ratio) set ke 1 agar enteng di HP/Laptop biasa
+      dpr={1} 
+      // 2. Shadows MATI jika Prambanan (karena ini penyebab utama lag)
+      shadows={!isPrambanan} 
+      
+      // Posisi kamera awal (Override nanti oleh Stage)
+      camera={{ fov: 45, position: [10, 5, 10] }} 
+      onPointerMissed={handleCanvasClick}
+      
+      // Optimasi performa WebGL
+      gl={{ antialias: true, powerPreference: "high-performance" }}
     >
-      <color attach="background" args={[0.05, 0.07, 0.12]} />
-      <ambientLight intensity={0.7} />
-      <directionalLight position={[0, 5, 4]} intensity={1.1} />
+      <Environment preset={environmentPreset} background blur={0.6} />
+
       <Suspense fallback={null}>
-        <MonasPreviewModel
-          modelUri={modelUri}
-          modelScale={modelScale}
-          modelPosition={modelPosition}
-        />
+        <Stage 
+          environment={null} 
+          intensity={1} 
+          contactShadow={false} 
+          // Matikan shadow di stage juga untuk Prambanan
+          shadows={!isPrambanan}
+          
+          // Logic Adjust Camera (Auto vs Manual)
+          adjustCamera={enableAdjust ? 1.2 : false} 
+        >
+          <MonasPreviewModel
+            modelUri={modelUri}
+            modelScale={modelScale}
+            modelPosition={[0, -2.5, 0]}
+            annotations={annotations}
+            activeId={activeData.id}
+            onSelectAnnotation={handleAnnotationSelect}
+          />
+        </Stage>
       </Suspense>
+
       <OrbitControls
         ref={controlsRef}
-        enablePan={false}
-        enableZoom
-        enableRotate
-        autoRotate={false}
-        minDistance={ORBIT_CONTROLS.MONUMENT_MIN_DISTANCE}
-        maxDistance={ORBIT_CONTROLS.MONUMENT_MAX_DISTANCE}
+        autoRotate={!activeData.id}
+        autoRotateSpeed={0.5}
+        makeDefault
+        
+        // FITUR SMOOTH ROTATION:
+        enableDamping={true}
+        dampingFactor={0.05} // Semakin kecil semakin "licin"
+        
+        // JARAK ZOOM:
+        minDistance={3}
+        maxDistance={100}
+        
+        // LIMIT ROTASI (Agar tidak bisa lihat bawah tanah):
+        // Math.PI / 2 artinya 90 derajat (Mentok Lantai)
+        maxPolarAngle={Math.PI / 2 - 0.05} // Dikurang dikit biar gak clipping lantai
+        minPolarAngle={0} // Bisa lihat sampai tepat di atas kepala
+        
+        // Kecepatan kontrol
+        rotateSpeed={0.6}
+        zoomSpeed={0.8}
+        panSpeed={0.8}
+        enablePan={true}
       />
     </Canvas>
   );
