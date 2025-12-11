@@ -117,6 +117,23 @@ function App() {
     if (monas) setLastClickedLandmark(monas);
   }, [lastClickedLandmark]);
 
+  // Debug route: if path matches a landmark id (e.g. /borobudur), open overlay
+  useEffect(() => {
+    try {
+      const path = (window?.location?.pathname || "").replace(/^\//, "");
+      if (!path) return;
+      const target = landmarks.find((l) => l.id === path);
+      if (target) {
+        setOverlayLandmark(target);
+        setOverlayOpen(true);
+        // Optionally open street view immediately if available
+        // We'll pass a prop to MonumentOverlay (startInStreetView) below
+      }
+    } catch (e) {
+      // ignore on environments without window
+    }
+  }, []);
+
   return (
     <>
       <LoadingScreen progress={loadingProgress} isComplete={!isLoading} />
@@ -164,6 +181,10 @@ function App() {
           onClose={() => setOverlayOpen(false)}
           pageMode
           landmark={overlayLandmark}
+          // if the current path matches the landmark id, start the overlay showing Street View
+          startInStreetView={
+            window?.location?.pathname?.replace(/^\//, "") === overlayLandmark.id
+          }
         />
       )}
     </>
