@@ -1,366 +1,131 @@
-import {
-  Suspense,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { Canvas } from "@react-three/fiber";
-import { useGLTF, OrbitControls } from "@react-three/drei";
-import { gsap } from "gsap";
-import {
-  MONUMENT_PREVIEW_MODEL_SCALE,
-  MONUMENT_PREVIEW_MODEL_POSITION,
-  MONUMENT_PREVIEW_CAMERA_POSITION,
-  MONUMENT_PREVIEW_CAMERA_FOV,
-  MONUMENT_ORBIT_MIN_DISTANCE,
-  MONUMENT_ORBIT_MAX_DISTANCE,
-  ANIM_CONTAINER_FADE_IN_DURATION,
-  ANIM_PANEL_OPEN_DURATION,
-  ANIM_PANEL_CLOSE_DURATION,
-  ANIM_CONTAINER_CLOSE_DURATION,
-  ANIM_PANEL_CLOSED_Y_OPEN,
-  ANIM_PANEL_CLOSED_Y_CLOSE,
-  ANIM_PANEL_CLOSED_SCALE,
-  ANIM_PANEL_OPEN_Y,
-} from "../const";
+import { useEffect, useState } from "react";
 import { resolveAssetPath } from "../../utils/assets";
-
-function MonasPreviewModel({
-  modelUri,
-  modelScale = MONUMENT_PREVIEW_MODEL_SCALE,
-  modelPosition = MONUMENT_PREVIEW_MODEL_POSITION,
-}) {
-  const { scene } = useGLTF(modelUri);
-  const clonedScene = useMemo(() => scene.clone(true), [scene]);
-
-  return (
-    <primitive
-      object={clonedScene}
-      scale={modelScale}
-      position={modelPosition}
-    />
-  );
-}
-
-function PreviewCanvas({
-  className = "w-full h-full",
-  modelUri,
-  modelScale,
-  modelPosition,
-}) {
-  const camPos = MONUMENT_PREVIEW_CAMERA_POSITION;
-  const controlsRef = useRef();
-
-  useEffect(() => {
-    if (controlsRef.current) {
-      controlsRef.current.target.set(0, -0.8, 0);
-      controlsRef.current.update();
-    }
-  }, []);
-
-  return (
-    <Canvas
-      className={className}
-      dpr={1}
-      gl={{ antialias: false, powerPreference: "low-power" }}
-      camera={{ position: camPos, fov: MONUMENT_PREVIEW_CAMERA_FOV }}
-    >
-      <color attach="background" args={[0.05, 0.07, 0.12]} />
-      <ambientLight intensity={0.7} />
-      <directionalLight position={[0, 5, 4]} intensity={1.1} />
-      <Suspense fallback={null}>
-        <MonasPreviewModel
-          modelUri={modelUri}
-          modelScale={modelScale}
-          modelPosition={modelPosition}
-        />
-      </Suspense>
-      <OrbitControls
-        ref={controlsRef}
-        enablePan={false}
-        enableZoom={true}
-        enableRotate={true}
-        autoRotate={false}
-        minDistance={MONUMENT_ORBIT_MIN_DISTANCE}
-        maxDistance={MONUMENT_ORBIT_MAX_DISTANCE}
-      />
-    </Canvas>
-  );
-}
+import PreviewCanvas from "./PreviewCanvas";
 
 function MonumentOverlay({
   open,
   onClose,
-  pageMode = false,
   landmark = null,
   modelUri = resolveAssetPath("model/monas.glb"),
-  title = "Monumen Nasional (Monas)",
+  title = "Monumen Nasional",
   description = null,
 }) {
-  const effectiveModelUri = landmark?.modelUri ?? modelUri;
-  const effectiveTitle = landmark?.name ?? title;
-  const effectiveDescription = landmark?.description ?? description;
-  const streetViewUrl = landmark?.streetViewUrl;
-  const additionalContent = landmark?.additionalContent;
+  // 1. Ambil data dari props landmark
+  const activeUri = landmark?.modelUri ?? modelUri;
+  const activeTitle = landmark?.name ?? title;
+  const activeDesc = landmark?.description ?? description;
+  const activeAnnotations = landmark?.annotations || [];
+  const activeStreetView = landmark?.streetViewUrl;
+  const activePreset = landmark?.environmentPreset || "park";
 
-  // Use per-landmark popupScale when provided; otherwise use default constant
-  const popupScaleOverride = Number(landmark?.popupScale);
-  const previewScale =
-    Number.isFinite(popupScaleOverride) && popupScaleOverride > 0
-      ? popupScaleOverride
-      : MONUMENT_PREVIEW_MODEL_SCALE;
+  // 2. LOGIC PENTING: Ambil scale dari landmark. 
+  // Jika tidak ada (null), pakai default 2 (biar tidak kekecilan).
+  const activeScale = landmark?.popupScale || 2; 
 
   const [isVisible, setIsVisible] = useState(false);
-  const [viewMode, setViewMode] = useState("3d"); // "3d" or "streetview"
-  const containerRef = useRef(null);
-  const panelRef = useRef(null);
+  const [showInfo, setShowInfo] = useState(true);
 
   useEffect(() => {
-    if (open) setIsVisible(true);
+    if (open) {
+      setIsVisible(true);
+    } else {
+      setTimeout(() => {
+        setIsVisible(false);
+      }, 500);
+    }
   }, [open]);
 
-  useLayoutEffect(() => {
-    if (!isVisible) return;
-    if (!containerRef.current || !panelRef.current) return;
-
-    if (open) {
-      gsap.set(containerRef.current, { opacity: 0, pointerEvents: "auto" });
-      gsap.set(panelRef.current, {
-        opacity: 0,
-        y: ANIM_PANEL_CLOSED_Y_OPEN,
-        scale: ANIM_PANEL_CLOSED_SCALE,
-      });
-
-      const tl = gsap.timeline();
-      tl.to(containerRef.current, {
-        opacity: 1,
-        duration: ANIM_CONTAINER_FADE_IN_DURATION,
-        ease: "power2.out",
-      }).to(
-        panelRef.current,
-        {
-          opacity: 1,
-          y: ANIM_PANEL_OPEN_Y,
-          scale: 1,
-          duration: ANIM_PANEL_OPEN_DURATION,
-          ease: "power3.out",
-        },
-        "<"
-      );
-    } else {
-      const tl = gsap.timeline({
-        onComplete: () => {
-          gsap.set(containerRef.current, { opacity: 0, pointerEvents: "none" });
-          setIsVisible(false);
-        },
-      });
-
-      tl.to(panelRef.current, {
-        opacity: 0,
-        y: ANIM_PANEL_CLOSED_Y_CLOSE,
-        scale: ANIM_PANEL_CLOSED_SCALE,
-        duration: ANIM_PANEL_CLOSE_DURATION,
-        ease: "power2.in",
-      }).to(
-        containerRef.current,
-        {
-          opacity: 0,
-          duration: ANIM_CONTAINER_CLOSE_DURATION,
-          ease: "power2.in",
-        },
-        "<"
-      );
-    }
-  }, [open, isVisible]);
-
-  if (!isVisible) return null;
-
-  if (pageMode) {
-    return (
-      <div
-        ref={containerRef}
-        className="fixed inset-0 z-50 flex items-stretch bg-slate-900/95 p-6"
-        role="dialog"
-        aria-modal="true"
-      >
-        <div
-          ref={panelRef}
-          className="mx-auto flex h-full max-w-7xl w-full flex-col gap-4"
-        >
-          <header className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold text-white">
-              {effectiveTitle}
-            </h2>
-            <div className="flex items-center gap-2">
-              {streetViewUrl && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setViewMode(viewMode === "3d" ? "streetview" : "3d")
-                  }
-                  className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition"
-                >
-                  {viewMode === "3d" ? "Street View" : "3D Model"}
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={onClose}
-                className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/90 hover:bg-white/10"
-              >
-                Back to map
-              </button>
-            </div>
-          </header>
-
-          <div className="flex grow gap-6">
-            <main className="flex-1 overflow-hidden bg-slate-900">
-              {viewMode === "3d" ? (
-                <PreviewCanvas
-                  className="w-full h-full"
-                  modelUri={effectiveModelUri}
-                  modelScale={previewScale}
-                  modelPosition={MONUMENT_PREVIEW_MODEL_POSITION}
-                />
-              ) : (
-                <iframe
-                  src={streetViewUrl}
-                  className="w-full h-full"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  title="Street View"
-                />
-              )}
-            </main>
-
-            <aside className="shrink-0 space-y-4 overflow-auto bg-slate-800 p-4 text-white/90 w-96">
-              <p>
-                {effectiveDescription ??
-                  "Explore the selected landmark using the 3D viewer."}
-              </p>
-              <p>
-                {viewMode === "3d"
-                  ? "Gunakan klik dan seret untuk memutar model. Zoom dengan roda mouse atau pinch pada trackpad untuk mendekatkan tampilan."
-                  : "Explore the landmark location in Google Street View. Drag to look around and use controls to navigate."}
-              </p>
-              {additionalContent && (
-                <section className="pt-2 border-t border-white/5 text-sm text-white/80">
-                  <h3 className="font-semibold mb-2">
-                    {additionalContent.title}
-                  </h3>
-                  {additionalContent.paragraphs.map((paragraph, index) => (
-                    <p key={index} className={index > 0 ? "mt-2" : ""}>
-                      {paragraph}
-                    </p>
-                  ))}
-                </section>
-              )}
-              <div className="mt-4 flex flex-col gap-2 text-sm text-white/70">
-                <div className="rounded-full border border-white/10 px-3 py-1">
-                  {effectiveTitle}
-                </div>
-              </div>
-            </aside>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (!open && !isVisible) return null;
 
   return (
     <div
-      ref={containerRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4"
-      role="dialog"
-      aria-modal="true"
-      onClick={onClose}
+      className={`fixed inset-0 z-[9999] w-screen h-screen bg-black transition-opacity duration-500 ease-in-out ${
+        open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+      }`}
     >
-      <div
-        ref={panelRef}
-        className="relative w-full max-w-3xl overflow-hidden rounded-3xl border border-white/10 bg-slate-900/95 p-6 text-white shadow-2xl backdrop-blur"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="absolute right-4 top-4 flex items-center gap-2">
-          {streetViewUrl && (
-            <button
-              type="button"
-              onClick={() =>
-                setViewMode(viewMode === "3d" ? "streetview" : "3d")
-              }
-              className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-sm font-medium text-white/90 transition hover:bg-white/20"
-            >
-              {viewMode === "3d" ? "Street View" : "3D Model"}
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-sm font-medium text-white/90 transition hover:bg-white/20"
-          >
-            Close
-          </button>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-2">
-          <div
-            className={`${
-              isPrambanan ? "h-96" : "h-72"
-            } overflow-hidden bg-slate-900`}
-          >
-            {viewMode === "3d" ? (
-              <PreviewCanvas
-                modelUri={effectiveModelUri}
-                modelScale={previewScale}
-                modelPosition={MONUMENT_PREVIEW_MODEL_POSITION}
-              />
-            ) : (
-              <iframe
-                src={streetViewUrl}
-                className="w-full h-full"
-                style={{ border: 0 }}
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                title="Street View"
-              />
-            )}
-          </div>
-
-          <div className="flex flex-col gap-3 text-white/90">
-            <h2 className="text-2xl font-semibold text-white">
-              {effectiveTitle}
-            </h2>
-            <p>
-              {effectiveDescription ??
-                "Explore the selected landmark using the 3D viewer."}
-            </p>
-            <p>
-              {viewMode === "3d"
-                ? "Klik dan seret model utama untuk menjelajahi wilayah lain, lalu pilih penanda untuk kembali melihat detailnya di sini."
-                : "Explore the landmark location in Google Street View. Drag to look around and use controls to navigate."}
-            </p>
-            {additionalContent && (
-              <section className="mt-4 border-t border-white/5 pt-4 text-sm text-white/80">
-                <h3 className="font-semibold">{additionalContent.title}</h3>
-                {additionalContent.paragraphs.map((paragraph, index) => (
-                  <p key={index} className={index === 0 ? "mt-2" : "mt-2"}>
-                    {paragraph}
-                  </p>
-                ))}
-              </section>
-            )}
-            <div className="mt-auto flex flex-wrap items-center gap-2 text-sm text-white/70">
-              <span className="rounded-full border border-white/10 px-3 py-1">
-                {effectiveTitle}
-              </span>
-            </div>
-          </div>
-        </div>
+      
+      {/* 3D CANVAS */}
+      <div className="absolute inset-0 w-full h-full">
+         <PreviewCanvas 
+            modelUri={activeUri} 
+            // 3. KIRIM SCALE KE SINI AGAR BISA DIPERBESAR
+            modelScale={activeScale} 
+            annotations={activeAnnotations}
+            environmentPreset={activePreset} 
+         />
+         {/* Gradient */}
+         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10 pointer-events-none" />
       </div>
+
+      {/* TOMBOL CLOSE */}
+      <button
+        onClick={onClose}
+        className="absolute top-6 right-6 z-50 p-3 bg-black/30 hover:bg-red-600/80 text-white rounded-full backdrop-blur-md border border-white/10 transition-all transform hover:scale-110 group"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:rotate-90 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      {/* INFO PANEL */}
+      <div 
+          className={`absolute bottom-6 left-6 z-40 max-w-sm w-full transition-all duration-500 transform ${
+              showInfo ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"
+          }`}
+      >
+          <div className="bg-black/60 backdrop-blur-md border-l-4 border-yellow-500 p-4 rounded-r-xl shadow-2xl text-white">
+              <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-xl font-bold text-white tracking-tight drop-shadow-md">
+                      {activeTitle}
+                  </h2>
+                  {landmark?.island && (
+                    <span className="text-[10px] font-bold text-black bg-yellow-400 px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+                      {landmark.island}
+                    </span>
+                  )}
+              </div>
+              
+              <div className="max-h-[80px] overflow-y-auto pr-2 custom-scrollbar mb-3">
+                  <p className="text-gray-200 text-xs leading-relaxed font-light">
+                      {activeDesc || "Deskripsi tidak tersedia."}
+                  </p>
+              </div>
+
+              <div className="flex gap-2">
+                  {activeStreetView && (
+                  <a 
+                      href={activeStreetView}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold rounded shadow-md transition-all hover:-translate-y-0.5"
+                  >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      Street View
+                  </a>
+                  )}
+                  <button 
+                      onClick={() => setShowInfo(false)}
+                      className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold rounded backdrop-blur transition-all border border-white/10"
+                  >
+                      Sembunyikan
+                  </button>
+              </div>
+          </div>
+      </div>
+
+      {/* TOMBOL BUKA KEMBALI */}
+      {!showInfo && (
+          <button 
+              onClick={() => setShowInfo(true)}
+              className="absolute bottom-6 left-6 z-50 p-3 bg-yellow-500 hover:bg-yellow-400 text-black rounded-full shadow-lg transition-all animate-bounce"
+          >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+          </button>
+      )}
     </div>
   );
 }
