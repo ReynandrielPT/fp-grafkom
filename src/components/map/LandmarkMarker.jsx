@@ -18,11 +18,11 @@ const DISABLE_TEXT_RAYCAST = () => null;
 
 const IDLE_ANIMATION = {
   FLOAT_SPEED: 2,
-  FLOAT_AMPLITUDE: 0.05,
+  FLOAT_AMPLITUDE: 0.02,
   HIDE_DISTANCE: 15,
   FADE_START_DISTANCE: 100,
   BASE_SCALE: 1,
-  BASE_HEIGHT: 0.3,
+  BASE_HEIGHT: 0.1,
 };
 
 /**
@@ -391,12 +391,12 @@ function LandmarkMarker({
     <group ref={markerRef} position={position} onClick={handleClick}>
       <mesh
         ref={registerLabelHitbox}
-        position={[0, 0.3, 0]}
+        position={[0, 0.1, 0]}
         onClick={handleClick}
         onPointerEnter={handlePointerEnter}
         onPointerLeave={handlePointerLeave}
       >
-        <boxGeometry args={[0.2, 0.2, 0.2]} />
+        <boxGeometry args={[0.2, 0.1, 0.2]} />
         <meshBasicMaterial
           transparent
           opacity={0}
