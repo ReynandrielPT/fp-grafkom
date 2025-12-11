@@ -20,7 +20,7 @@ const baseLandmarks = [
     zIndex: 0,
     island: "Jawa",
     environmentPreset: "park",
-    streetViewUrl: "https://www.google.com/maps/embed?pb=!4v1764683815646!6m8!1m7!1sCAoSFkNJSE0wb2dLRUlDQWdJREUzclhOWEE.!2m2!1d-6.175035830309233!2d106.8271922828707!3f269.17352!4f0!5f0.7820865974627469",
+    streetViewUrl: "https://www.google.com/maps/embed?pb=!4v1765461461500!6m8!1m7!1sY80yDybYlYoCXUoSJiWc4w!2m2!1d-6.176014352612871!2d106.826944265311!3f19.594093660694654!4f29.255613321183887!5f0.7820865974627469",
     description:
       "Monumen Nasional (Monas) adalah tugu peringatan setinggi 132 meter yang didirikan untuk mengenang perlawanan rakyat Indonesia merebut kemerdekaan.",
     
@@ -70,7 +70,7 @@ const baseLandmarks = [
     zIndex: 0,
     island: "Jawa",
     environmentPreset: "forest", 
-    streetViewUrl: "https://goo.gl/maps/7QJjXZ8Z8Z8Z8Z8Z8", 
+    streetViewUrl: "https://www.google.com/maps/embed?pb=!4v1764685566710!6m8!1m7!1szoywrhCLZWVhuEQb0wwRkg!2m2!1d-7.752211992764268!2d110.4921424240987!3f259.0937385099725!4f-5.50280768510838!5f0.4000000000000002", 
     description: "Candi utama (Induk) dalam kompleks Prambanan yang didedikasikan untuk Dewa Siwa (Mahadewa). Bangunan ini menjulang setinggi 47 meter.",
     
     // Posisi Annotation saya reset ke tengah agar mudah Anda atur ulang
@@ -132,7 +132,7 @@ const baseLandmarks = [
     zIndex: 0,
     island: "Papua",
     environmentPreset: "park",
-    streetViewUrl: "https://www.google.com/maps/embed?pb=!4v1764686350283!6m8!1m7!1sCAoSF0NJSE0wb2dLRUlDQWdJQ2t5dlB6aWdF!2m2!1d-8.508270479738403!2d140.4119933748439!3f275.73574163937036!4f0.3770285621036038!5f0.7820865974627469",
+    streetViewUrl: "https://www.google.com/maps/embed?pb=!4v1765461619249!6m8!1m7!1sCAoSHENJQUJJaEJBc3Zhc0lEUWpZcUFLcjA1dzR6ZlY.!2m2!1d-8.508176721821123!2d140.4121975531084!3f298.63194580731266!4f-1.823888927748314!5f0.7820865974627469",
     description: "Monumen impian Indonesia 2085 di Merauke.",
     annotations: [
       { id: 1, position: [0, 1, 0], title: "Logo Avengers", description: "Desain arsitektur unik." },
@@ -154,7 +154,7 @@ const baseLandmarks = [
     zIndex: 0,
     island: "Kalimantan",
     environmentPreset: "city",
-    streetViewUrl: "https://www.google.com/maps/embed?pb=!4v1764686531579!6m8!1m7!1sCAoSFkNJSE0wb2dLRUlDQWdJQ2ttSXY1YUE.!2m2!1d0.0009994971359691877!2d109.3222051828273!3f44.92688624897781!4f12.438324908050475!5f0.7820865974627469",
+    streetViewUrl: "https://www.google.com/maps/embed?pb=!4v1765461706721!6m8!1m7!1sFDSNwORY0gaz-IhS3bAJYQ!2m2!1d0.00128176250041357!2d109.322353480239!3f218.28857222550897!4f7.979226612761195!5f0.7820865974627469",
     description: "Titik nol derajat garis lintang bumi di Pontianak.",
     annotations: [
       { id: 1, position: [0, 1.5, 0], title: "Panah Arah", description: "Penunjuk Utara-Selatan." },
@@ -211,7 +211,7 @@ const baseLandmarks = [
     // 8. MASJID RAYA SUMBAR
     // ========================================================
     id: "masjid-raya-sumbar",
-    name: "Masjid Raya Sumbar",
+    name: "Masjid Raya Sumatera Barat",
     modelUri: model("masjid_raya_sumatera_barat.glb"),
     latitude: -0.947083,
     longitude: 100.417181,
@@ -220,7 +220,7 @@ const baseLandmarks = [
     zIndex: 0,
     island: "Sumatra",
     environmentPreset: "city",
-    streetViewUrl: "https://www.google.com/maps/embed?pb=!4v1764689018260!6m8!1m7!1sCAoSF0NJSE0wb2dLRUlDQWdJQzR5dkQ3eWdF!2m2!1d-0.9242290308970521!2d100.3624958761296!3f337.45135179437085!4f5.078482308203817!5f0.7820865974627469",
+    streetViewUrl: "https://www.google.com/maps/embed?pb=!4v1765461886474!6m8!1m7!1skIGIciRKfIN00XzedCus0g!2m2!1d-0.9242044802386984!2d100.3615857776425!3f99.99839275275166!4f19.69264924425525!5f0.7820865974627469",
     description: "Masjid dengan arsitektur atap Gonjong khas Minangkabau.",
     annotations: [
       { id: 1, position: [0, 1.5, 0], title: "Gonjong", description: "Atap Minang." },
@@ -264,7 +264,7 @@ const baseLandmarks = [
     zIndex: 0,
     island: "Sumatra",
     environmentPreset: "forest",
-    streetViewUrl: "https://www.google.com/maps/embed?pb=!4v1764687521477!6m8!1m7!1sCAoSHENJQUJJaEFHYndQVGxoQXZNMmUtaWk0QUJsU2o.!2m2!1d1.409282310499514!2d99.72667830943367!3f165.52861!4f0!5f0.7820865974627469",
+    streetViewUrl: "https://www.google.com/maps/embed?pb=!4v1765461965947!6m8!1m7!1shkg3rIh7J9CJZVjsvdUtgg!2m2!1d1.409069219503454!2d99.72634643927046!3f61.98735384457794!4f1.9845596589886156!5f0.7820865974627469",
     description: "Candi bata merah peninggalan Kerajaan Pannai.",
     annotations: [
       { id: 1, position: [0, 1, 0], title: "Bata Merah", description: "Material utama." },
