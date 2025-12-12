@@ -4,8 +4,11 @@ import IndonesiaCanvas from "./components/map/IndonesiaCanvas";
 import MonumentOverlay from "./components/overlays/MonumentOverlay";
 import LoadingScreen from "./components/ui/LoadingScreen";
 import LandmarkList from "./components/ui/LandmarkList";
+import AppHeader from "./components/ui/AppHeader";
 import { landmarks } from "./data/landmarks";
 import { isSamePosition } from "./utils/coordinateUtils";
+import audioManager from "./utils/audioManager";
+import { resolveAssetPath } from "./utils/assets";
 
 /**
  * App Component
@@ -23,6 +26,30 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [awaitingAnimationForId, setAwaitingAnimationForId] = useState(null);
   const [visitedLandmarkIds, setVisitedLandmarkIds] = useState(() => new Set());
+  const [audioStarted, setAudioStarted] = useState(false);
+
+  // Start background music after user interaction
+  const startBackgroundMusic = () => {
+    if (!audioStarted) {
+      const backgroundMusicPath = resolveAssetPath("music/jazz.mp3");
+      audioManager.playBackgroundMusic(backgroundMusicPath);
+      setAudioStarted(true);
+    }
+  };
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      audioManager.cleanup();
+    };
+  }, []);
+
+  // Start music when loading completes (user has interacted with page)
+  useEffect(() => {
+    if (!isLoading) {
+      startBackgroundMusic();
+    }
+  }, [isLoading]);
 
   const openGuide = () => {
     localStorage.removeItem("hasSeenGuide");
@@ -129,7 +156,7 @@ function App() {
         // Optionally open street view immediately if available
         // We'll pass a prop to MonumentOverlay (startInStreetView) below
       }
-    } catch (e) {
+    } catch {
       // ignore on environments without window
     }
   }, []);
@@ -138,23 +165,25 @@ function App() {
     <>
       <LoadingScreen progress={loadingProgress} isComplete={!isLoading} />
 
-      <InitialGuide show={showGuide} onClose={() => setShowGuide(false)} />
+      <InitialGuide 
+        show={showGuide} 
+        onClose={() => setShowGuide(false)}
+        onInteraction={startBackgroundMusic}
+      />
 
-      <div className="fixed left-4 top-4 z-50 pointer-events-none">
-        <h1 className="text-4xl font-bold text-white drop-shadow-lg mb-1">
-          Indonesia 3D Map
-        </h1>
-        <p className="text-sm text-white/80 drop-shadow">
-          Explore Indonesian landmarks in 3D
-        </p>
-      </div>
+      <AppHeader />
 
       <button
-        className="fixed right-4 top-4 z-50 bg-white/10 text-white border border-white/20 px-3 py-2 rounded-md backdrop-blur hover:bg-white/20 transition"
+        className="fixed right-4 top-4 z-50 bg-teal-primary/30 hover:bg-teal-primary/50 text-cyan-soft border border-teal-light/30 px-4 py-2 rounded-xl backdrop-blur-xl transition-all hover:scale-105 shadow-lg pointer-events-auto"
         onClick={openGuide}
-        aria-label="Show guide"
+        aria-label="Tampilkan Panduan"
       >
-        Show Guide
+        <span className="flex items-center gap-2">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Panduan
+        </span>
       </button>
 
       <IndonesiaCanvas

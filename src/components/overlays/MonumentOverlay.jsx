@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { resolveAssetPath } from "../../utils/assets";
-import PreviewCanvas from "./PreviewCanvas";
+import LandmarkViewer from "./LandmarkViewer";
+import InfoPanel from "./InfoPanel";
+import StreetViewModal from "./StreetViewModal";
+import audioManager from "../../utils/audioManager";
 
 function MonumentOverlay({
   open,
@@ -10,22 +13,31 @@ function MonumentOverlay({
   title = "Monumen Nasional",
   description = null,
 }) {
-  // 1. Ambil data dari props landmark
+  // Extract landmark data
   const activeUri = landmark?.modelUri ?? modelUri;
   const activeTitle = landmark?.name ?? title;
   const activeDesc = landmark?.description ?? description;
   const activeAnnotations = landmark?.annotations || [];
   const activeStreetView = landmark?.streetViewUrl;
   const activePreset = landmark?.environmentPreset || "park";
-
-  // 2. LOGIC PENTING: Ambil scale dari landmark.
-  const activeScale = landmark?.popupScale || 2; 
+  const activeAudio = landmark?.audioUri;
+  const activeScale = landmark?.popupScale || 2;
 
   const [isVisible, setIsVisible] = useState(false);
   const [showInfo, setShowInfo] = useState(true);
-  
-  // STATE BARU: Untuk mengontrol Popup Street View (Iframe)
   const [showStreetView, setShowStreetView] = useState(false);
+
+  // Play landmark audio when overlay opens, stop immediately when closing
+  useEffect(() => {
+    if (open && activeAudio) {
+      audioManager.playLandmarkAudio(activeAudio);
+    }
+    
+    // Stop audio immediately when modal starts closing
+    if (!open) {
+      audioManager.stopLandmarkAudio();
+    }
+  }, [open, activeAudio]);
 
   useEffect(() => {
     if (open) {
@@ -33,7 +45,7 @@ function MonumentOverlay({
     } else {
       setTimeout(() => {
         setIsVisible(false);
-        setShowStreetView(false); // Reset street view saat overlay ditutup
+        setShowStreetView(false);
       }, 500);
     }
   }, [open]);
@@ -47,56 +59,29 @@ function MonumentOverlay({
       }`}
     >
       
-      {/* 3D CANVAS */}
+      {/* 3D Canvas */}
       <div className="absolute inset-0 w-full h-full">
-         <PreviewCanvas 
-            modelUri={activeUri} 
-            modelScale={activeScale} 
-            annotations={activeAnnotations}
-            environmentPreset={activePreset} 
-         />
-         {/* Gradient */}
-         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10 pointer-events-none" />
+        <LandmarkViewer 
+          modelUri={activeUri} 
+          modelScale={activeScale} 
+          annotations={activeAnnotations}
+          environmentPreset={activePreset} 
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10 pointer-events-none" />
       </div>
 
-      {/* ============================================================ */}
-      {/* FITUR BARU: STREET VIEW POPUP (IFRAME) */}
-      {/* ============================================================ */}
-      {showStreetView && activeStreetView && (
-        <div className="absolute inset-0 z-[10000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="relative w-full max-w-5xl h-[80vh] bg-black rounded-2xl overflow-hidden border border-white/20 shadow-2xl">
-            
-            {/* Tombol Close Khusus Street View */}
-            <button
-              onClick={() => setShowStreetView(false)}
-              className="absolute top-4 right-4 z-50 p-2 bg-black/60 hover:bg-red-600 text-white rounded-full backdrop-blur-md transition-all border border-white/10 group"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 group-hover:rotate-90 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+      {/* Street View Modal */}
+      <StreetViewModal 
+        isOpen={showStreetView}
+        streetViewUrl={activeStreetView}
+        onClose={() => setShowStreetView(false)}
+      />
 
-            {/* IFRAME GOOGLE MAPS */}
-            <iframe 
-              src={activeStreetView}
-              width="100%" 
-              height="100%" 
-              style={{ border: 0 }} 
-              allowFullScreen="" 
-              loading="lazy" 
-              referrerPolicy="no-referrer-when-downgrade"
-              title="Street View"
-            ></iframe>
-          </div>
-        </div>
-      )}
-
-      {/* TOMBOL CLOSE UTAMA (Overlay 3D) */}
-      {/* Disembunyikan jika Street View sedang terbuka agar tidak salah pencet */}
+      {/* Close Button */}
       {!showStreetView && (
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 z-50 p-3 bg-black/30 hover:bg-red-600/80 text-white rounded-full backdrop-blur-md border border-white/10 transition-all transform hover:scale-110 group"
+          className="absolute top-6 right-6 z-50 p-3 bg-teal-primary/30 hover:bg-red-600/80 text-cyan-soft rounded-full backdrop-blur-md border border-teal-light/20 transition-all transform hover:scale-110 group"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:rotate-90 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -104,63 +89,27 @@ function MonumentOverlay({
         </button>
       )}
 
-      {/* INFO PANEL */}
-      <div 
-          className={`absolute bottom-6 left-6 z-40 max-w-sm w-full transition-all duration-500 transform ${
-              showInfo && !showStreetView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"
-          }`}
-      >
-          <div className="bg-black/60 backdrop-blur-md border-l-4 border-yellow-500 p-4 rounded-r-xl shadow-2xl text-white">
-              <div className="flex items-center justify-between mb-2">
-                  <h2 className="text-xl font-bold text-white tracking-tight drop-shadow-md">
-                      {activeTitle}
-                  </h2>
-                  {landmark?.island && (
-                    <span className="text-[10px] font-bold text-black bg-yellow-400 px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
-                      {landmark.island}
-                    </span>
-                  )}
-              </div>
-              
-              <div className="max-h-[80px] overflow-y-auto pr-2 custom-scrollbar mb-3">
-                  <p className="text-gray-200 text-xs leading-relaxed font-light">
-                      {activeDesc || "Deskripsi tidak tersedia."}
-                  </p>
-              </div>
+      {/* Info Panel */}
+      <InfoPanel 
+        title={activeTitle}
+        description={activeDesc}
+        island={landmark?.island}
+        isVisible={showInfo && !showStreetView}
+        hasStreetView={!!activeStreetView}
+        onOpenStreetView={() => setShowStreetView(true)}
+        onHide={() => setShowInfo(false)}
+      />
 
-              <div className="flex gap-2">
-                  {activeStreetView && (
-                  // UBAH: Dari <a> menjadi <button> agar membuka Popup Iframe
-                  <button 
-                      onClick={() => setShowStreetView(true)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold rounded shadow-md transition-all hover:-translate-y-0.5"
-                  >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                      </svg>
-                      Street View
-                  </button>
-                  )}
-                  <button 
-                      onClick={() => setShowInfo(false)}
-                      className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold rounded backdrop-blur transition-all border border-white/10"
-                  >
-                      Sembunyikan
-                  </button>
-              </div>
-          </div>
-      </div>
-
-      {/* TOMBOL BUKA KEMBALI INFO */}
+      {/* Show Info Button */}
       {!showInfo && !showStreetView && (
-          <button 
-              onClick={() => setShowInfo(true)}
-              className="absolute bottom-6 left-6 z-50 p-3 bg-yellow-500 hover:bg-yellow-400 text-black rounded-full shadow-lg transition-all animate-bounce"
-          >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-          </button>
+        <button 
+          onClick={() => setShowInfo(true)}
+          className="absolute bottom-6 left-6 z-50 p-3 bg-cyan-soft hover:bg-teal-light text-ocean-deep rounded-full shadow-lg transition-all animate-bounce"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </button>
       )}
     </div>
   );

@@ -15,39 +15,46 @@ function LoadingScreen({ progress, isComplete }) {
 
   return (
     <div
-      className={`fixed inset-0 z-[100] flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 transition-opacity duration-1000 ${
+      className={`fixed inset-0 z-[100] flex items-center justify-center bg-gradient-to-br from-ocean-deep via-ocean-dark to-teal-primary/20 transition-opacity duration-1000 ${
         isComplete ? "opacity-0 pointer-events-none" : "opacity-100"
       }`}
     >
       <div className="text-center space-y-8 px-4">
         {/* Logo/Title */}
-        <div className="space-y-2">
-          <h1 className="text-5xl md:text-6xl font-bold text-white drop-shadow-2xl">
-            Indonesia 3D Map
-          </h1>
-          <p className="text-lg text-white/70">
-            Explore Indonesian landmarks in 3D
+        <div className="space-y-4">
+          <div className="flex items-center justify-center gap-4">
+            <div className="w-16 h-16 bg-gradient-to-br from-teal-light to-cyan-soft rounded-2xl flex items-center justify-center shadow-2xl animate-pulse">
+              <span className="text-4xl">🗺️</span>
+            </div>
+            <h1 className="text-5xl md:text-7xl font-bold">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-light via-cyan-soft to-teal-light animate-pulse">
+                Petanesia
+              </span>
+            </h1>
+          </div>
+          <p className="text-lg text-cyan-soft/80">
+            Jelajahi Landmark Indonesia dalam 3D
           </p>
         </div>
 
         {/* Loading Bar */}
         <div className="w-80 max-w-full mx-auto space-y-3">
-          <div className="h-2 bg-white/10 rounded-full overflow-hidden backdrop-blur">
+          <div className="h-2 bg-ocean-dark/50 rounded-full overflow-hidden backdrop-blur border border-teal-light/20">
             <div
-              className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
+              className="h-full bg-gradient-to-r from-teal-primary via-cyan-soft to-teal-light transition-all duration-300 ease-out"
               style={{ width: `${displayProgress}%` }}
             />
           </div>
-          <p className="text-white/60 text-sm">
-            Loading 3D models... {Math.round(displayProgress)}%
+          <p className="text-cyan-soft/70 text-sm">
+            Memuat model 3D... {Math.round(displayProgress)}%
           </p>
         </div>
 
         {/* Loading Animation */}
         <div className="flex items-center justify-center gap-2">
-          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
-          <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
-          <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" />
+          <div className="w-2 h-2 bg-teal-primary rounded-full animate-bounce [animation-delay:-0.3s]" />
+          <div className="w-2 h-2 bg-cyan-soft rounded-full animate-bounce [animation-delay:-0.15s]" />
+          <div className="w-2 h-2 bg-teal-light rounded-full animate-bounce" />
         </div>
       </div>
     </div>
