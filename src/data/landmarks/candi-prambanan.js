@@ -10,7 +10,7 @@ export default {
   id: "candi-prambanan",
   name: "Candi Prambanan",
   modelUri: model("candi_prambanan.glb"),
-  audioUri: audio("testing-sound.mp3"),
+  audioUri: audio("candi_prambanan.mp3"),
   latitude: -7.852222,
   longitude: 110.491667,
   mapScale: scaled(1.8),

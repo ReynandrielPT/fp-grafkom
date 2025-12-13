@@ -5,6 +5,7 @@ import MonumentOverlay from "./components/overlays/MonumentOverlay";
 import LoadingScreen from "./components/ui/LoadingScreen";
 import LandmarkList from "./components/ui/LandmarkList";
 import AppHeader from "./components/ui/AppHeader";
+import VolumeControl from "./components/ui/VolumeControl";
 import { landmarks } from "./data/landmarks";
 import { isSamePosition } from "./utils/coordinateUtils";
 import audioManager from "./utils/audioManager";
@@ -165,13 +166,16 @@ function App() {
     <>
       <LoadingScreen progress={loadingProgress} isComplete={!isLoading} />
 
-      <InitialGuide 
-        show={showGuide} 
+      <InitialGuide
+        show={showGuide}
         onClose={() => setShowGuide(false)}
         onInteraction={startBackgroundMusic}
       />
 
       <AppHeader />
+
+      {/* Show global volume control after loading completes */}
+      {!isLoading && <VolumeControl />}
 
       <button
         className="fixed right-4 top-4 z-50 bg-teal-primary/30 hover:bg-teal-primary/50 text-cyan-soft border border-teal-light/30 px-4 py-2 rounded-xl backdrop-blur-xl transition-all hover:scale-105 shadow-lg pointer-events-auto"
@@ -179,8 +183,18 @@ function App() {
         aria-label="Tampilkan Panduan"
       >
         <span className="flex items-center gap-2">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
           Panduan
         </span>
@@ -212,7 +226,8 @@ function App() {
           landmark={overlayLandmark}
           // if the current path matches the landmark id, start the overlay showing Street View
           startInStreetView={
-            window?.location?.pathname?.replace(/^\//, "") === overlayLandmark.id
+            window?.location?.pathname?.replace(/^\//, "") ===
+            overlayLandmark.id
           }
         />
       )}

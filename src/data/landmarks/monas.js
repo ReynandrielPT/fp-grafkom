@@ -10,7 +10,7 @@ export default {
   id: "monas-jakarta",
   name: "Monumen Nasional (Monas)",
   modelUri: model("monas.glb"),
-  audioUri: audio("testing-sound.mp3"),
+  audioUri: audio("monas.mp3"),
   latitude: -6.175392,
   longitude: 106.827153,
   mapScale: scaled(1.8),

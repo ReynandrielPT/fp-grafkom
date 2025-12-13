@@ -10,7 +10,7 @@ export default {
   id: "gereja-tua-immanuel",
   name: "Gereja Tua Immanuel",
   modelUri: model("gereja_tua_immanuel.glb"),
-  audioUri: audio("testing-sound.mp3"),
+  audioUri: audio("gereja_tua_immanuel.mp3"),
   latitude: -3.583103962725441,
   longitude: 128.08388902204044,
   mapScale: scaled(0.3),

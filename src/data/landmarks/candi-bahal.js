@@ -10,7 +10,7 @@ export default {
   id: "candi-bahal",
   name: "Candi Bahal",
   modelUri: model("candi_bahal.glb"),
-  audioUri: audio("testing-sound.mp3"),
+  audioUri: audio("candi_bahal.mp3"),
   latitude: 2.076944,
   longitude: 99.065278,
   mapScale: scaled(0.08),
@@ -20,31 +20,36 @@ export default {
   environmentPreset: "forest",
   streetViewUrl:
     "https://www.google.com/maps/embed?pb=!4v1765461965947!6m8!1m7!1shkg3rIh7J9CJZVjsvdUtgg!2m2!1d1.409069219503454!2d99.72634643927046!3f61.98735384457794!4f1.9845596589886156!5f0.7820865974627469",
-  description: "Situs purbakala di Sumatera Utara ini merupakan rangkaian candi bata merah peninggalan Kerajaan Pannai yang menganut aliran Buddha Vajrayana (Tantrayana). Ciri khasnya terlihat pada atap berbentuk dagoba (silinder) dan relief yaksa menari yang menunjukkan gaya seni berbeda dari candi di Jawa.",
+  description:
+    "Situs purbakala di Sumatera Utara ini merupakan rangkaian candi bata merah peninggalan Kerajaan Pannai yang menganut aliran Buddha Vajrayana (Tantrayana). Ciri khasnya terlihat pada atap berbentuk dagoba (silinder) dan relief yaksa menari yang menunjukkan gaya seni berbeda dari candi di Jawa.",
   annotations: [
     {
       id: 1,
       position: [-11, 13, 0],
       title: "Atap Dagoba",
-      description: "Berbeda dengan candi di Jawa yang umumnya beratap stupa lonceng atau ratna, atap Candi Bahal I berbentuk silinder atau dagoba. Bentuk ini mencerminkan gaya arsitektur khas yang mirip dengan stupa di India Selatan atau Sri Lanka, dihiasi dengan pahatan untaian bunga yang melingkari tepiannya.",
+      description:
+        "Berbeda dengan candi di Jawa yang umumnya beratap stupa lonceng atau ratna, atap Candi Bahal I berbentuk silinder atau dagoba. Bentuk ini mencerminkan gaya arsitektur khas yang mirip dengan stupa di India Selatan atau Sri Lanka, dihiasi dengan pahatan untaian bunga yang melingkari tepiannya.",
     },
     {
       id: 2,
       position: [-11, 8, 4],
       title: "Struktur Bata Merah",
-      description: "Seluruh bangunan candi, mulai dari kaki hingga puncak, dibangun menggunakan material batu bata merah, bukan batu andesit. Penggunaan bata merah ini menunjukkan kemajuan teknologi pembakaran tanah liat pada masa itu dan memberikan warna hangat yang kontras dengan lingkungan sekitarnya.",
+      description:
+        "Seluruh bangunan candi, mulai dari kaki hingga puncak, dibangun menggunakan material batu bata merah, bukan batu andesit. Penggunaan bata merah ini menunjukkan kemajuan teknologi pembakaran tanah liat pada masa itu dan memberikan warna hangat yang kontras dengan lingkungan sekitarnya.",
     },
     {
       id: 3,
       position: [-10, 1, 6.5],
       title: "Relief Singa & Yaksa",
-      description: "Pada bagian kaki candi, terdapat panel-panel relief yang menggambarkan Yaksa (makhluk mitologi) berkepala hewan yang sedang menari-nari dan singa yang duduk. Tarian ini sering dikaitkan dengan ritual Tantrayana (Bhairawa) yang ekspresif, berbeda dengan relief candi di Jawa yang cenderung tenang.",
+      description:
+        "Pada bagian kaki candi, terdapat panel-panel relief yang menggambarkan Yaksa (makhluk mitologi) berkepala hewan yang sedang menari-nari dan singa yang duduk. Tarian ini sering dikaitkan dengan ritual Tantrayana (Bhairawa) yang ekspresif, berbeda dengan relief candi di Jawa yang cenderung tenang.",
     },
     {
       id: 4,
       position: [-8, 7, 0.5],
       title: "Bilik Utama",
-      description: "Pintu masuk candi menghadap ke Timur dan menuntun ke sebuah ruangan kosong di dalam tubuh candi. Dahulu ruangan ini diperkirakan berisi arca suci, namun kini kosong. Bingkai pintu masuknya polos tanpa hiasan Kala-Makara yang rumit seperti pada candi Jawa umumnya.",
+      description:
+        "Pintu masuk candi menghadap ke Timur dan menuntun ke sebuah ruangan kosong di dalam tubuh candi. Dahulu ruangan ini diperkirakan berisi arca suci, namun kini kosong. Bingkai pintu masuknya polos tanpa hiasan Kala-Makara yang rumit seperti pada candi Jawa umumnya.",
     },
   ],
 };

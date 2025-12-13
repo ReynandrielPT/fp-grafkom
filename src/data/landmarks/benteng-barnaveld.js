@@ -10,7 +10,7 @@ export default {
   id: "benteng-barnaveld",
   name: "Benteng Barnaveld",
   modelUri: model("benteng_barnaveld.glb"),
-  audioUri: audio("testing-sound.mp3"),
+  audioUri: audio("benteng_barnaveld.mp3"),
   latitude: -0.35958626938027927,
   longitude: 127.51517860608296,
   mapScale: scaled(0.1),
