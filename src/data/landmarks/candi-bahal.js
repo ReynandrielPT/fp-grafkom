@@ -20,7 +20,7 @@ export default {
   environmentPreset: "forest",
   streetViewUrl:
     "https://www.google.com/maps/embed?pb=!4v1765461965947!6m8!1m7!1shkg3rIh7J9CJZVjsvdUtgg!2m2!1d1.409069219503454!2d99.72634643927046!3f61.98735384457794!4f1.9845596589886156!5f0.7820865974627469",
-  description: "Candi bata merah peninggalan Kerajaan Pannai.",
+  description: "Situs purbakala di Sumatera Utara ini merupakan rangkaian candi bata merah peninggalan Kerajaan Pannai yang menganut aliran Buddha Vajrayana (Tantrayana). Ciri khasnya terlihat pada atap berbentuk dagoba (silinder) dan relief yaksa menari yang menunjukkan gaya seni berbeda dari candi di Jawa.",
   annotations: [
     {
       id: 1,

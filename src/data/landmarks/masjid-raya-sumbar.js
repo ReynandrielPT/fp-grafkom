@@ -20,7 +20,7 @@ export default {
   environmentPreset: "city",
   streetViewUrl:
     "https://www.google.com/maps/embed?pb=!4v1765461886474!6m8!1m7!1skIGIciRKfIN00XzedCus0g!2m2!1d-0.9242044802386984!2d100.3615857776425!3f99.99839275275166!4f19.69264924425525!5f0.7820865974627469",
-  description: "Masjid dengan arsitektur atap Gonjong khas Minangkabau.",
+  description: "Masjid tanpa kubah ini menampilkan arsitektur modern yang mengadaptasi atap bagonjong Rumah Gadang sekaligus menyimbolkan bentangan kain sorban Nabi Muhammad SAW. Bangunan ini dirancang khusus dengan konstruksi tahan gempa magnitudo 10 dan berfungsi sebagai tempat evakuasi (shelter) tsunami.",
   annotations: [
     {
       id: 1,
