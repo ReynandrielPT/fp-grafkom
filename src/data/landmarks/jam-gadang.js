@@ -21,7 +21,7 @@ export default {
   streetViewUrl:
     "https://www.google.com/maps/embed?pb=!4v1764687420785!6m8!1m7!1spOH5K4Qyiq-kMs_90A-0WQ!2m2!1d-0.3050031606353411!2d100.3696770920085!3f218.6719470613562!4f11.33067463501665!5f0.7820865974627469",
   description:
-    "Ikon Bukittinggi dengan mesin jam langka hadiah Ratu Belanda.",
+    "Ikon Bukittinggi ini menyimpan mesin jam mekanik langka buatan Jerman yang hanya diproduksi dua unit di dunia, menjadikannya \"kembaran\" Big Ben di London. Atap menaranya yang unik telah mengalami tiga kali perubahan sejarah, kini berbentuk gonjong runcing yang merepresentasikan identitas Minangkabau.",
   annotations: [
     {
       id: 1,

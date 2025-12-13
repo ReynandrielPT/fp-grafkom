@@ -21,7 +21,7 @@ export default {
   streetViewUrl:
     "https://www.google.com/maps/embed?pb=!4v1764685566710!6m8!1m7!1szoywrhCLZWVhuEQb0wwRkg!2m2!1d-7.752211992764268!2d110.4921424240987!3f259.0937385099725!4f-5.50280768510838!5f0.4000000000000002",
   description:
-    "Candi utama (Induk) dalam kompleks Prambanan yang didedikasikan untuk Dewa Siwa (Mahadewa). Bangunan ini menjulang setinggi 47 meter.",
+    "Kompleks candi Hindu terbesar di Indonesia ini dipersembahkan untuk Trimurti dan terkenal dengan menara utamanya yang menjulang setinggi 47 meter. Keindahannya diperkaya oleh relief kisah Ramayana dan legenda Roro Jonggrang yang melekat kuat dalam sejarah budaya Jawa.",
   annotations: [
     {
       id: 1,

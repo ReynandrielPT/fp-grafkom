@@ -27,12 +27,14 @@ export default {
       position: [-8, 90, 10],
       title: "Sura (Ikan Hiu)",
       description: "Melambangkan penguasa laut yang ganas. Dalam konteks sejarah, ini merepresentasikan kekuatan maritim Surabaya sebagai kota pelabuhan utama yang siap menghadang ancaman dari laut.",
+      occlude: false,
     },
     {
       id: 2,
       position: [15, 70, 0],
       title: "Baya (Buaya)",
       description: "Melambangkan penguasa sungai/darat yang tangguh. Sosok ini merepresentasikan ketahanan warga kota dalam mempertahankan wilayahnya, seperti buaya yang tidak akan melepaskan mangsanya.",
+      occlude: false,
     },
   ],
 };

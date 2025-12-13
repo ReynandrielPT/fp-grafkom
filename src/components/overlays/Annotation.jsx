@@ -3,7 +3,7 @@ import { useRef } from "react";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
 
-function Annotation({ id, position, title, description, number, isOpen, onSelect }) {
+function Annotation({ id, position, title, description, number, isOpen, onSelect, occlude = true }) {
   const groupRef = useRef();
 
   const handleClick = (e) => {
@@ -26,7 +26,7 @@ function Annotation({ id, position, title, description, number, isOpen, onSelect
         position={[0, 0, 0]}
         center
         // HAPUS: distanceFactor={10}  <-- INI PENYEBABNYA
-        occlude
+        occlude={occlude}
         zIndexRange={[100, 0]}
       >
         <div className="relative flex items-center justify-center font-sans pointer-events-auto group">

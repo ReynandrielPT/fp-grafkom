@@ -20,7 +20,7 @@ export default {
   environmentPreset: "forest",
   streetViewUrl:
     "https://www.google.com/maps/embed?pb=!4v1764686077281!6m8!1m7!1sArYnALlhMQ_Ni2Cf37_P3Q!2m2!1d-7.607994190665645!2d110.2043583718553!3f306.5484412804959!4f11.912834236912119!5f0.4000000000000002",
-  description: "Candi Buddha terbesar di dunia yang terletak di Magelang.",
+  description: "Candi Buddha terbesar di dunia ini merupakan mahakarya arsitektur Wangsa Syailendra yang menggambarkan tingkatan alam semesta (Kamadhatu, Rupadhatu, Arupadhatu) menuju Nirwana. Bangunan megah ini dihiasi ribuan relief naratif dan ratusan stupa berlubang yang memuncak pada satu stupa induk monumental.",
   annotations: [
     {
       id: 1,

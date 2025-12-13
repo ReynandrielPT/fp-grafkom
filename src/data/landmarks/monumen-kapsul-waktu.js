@@ -20,7 +20,7 @@ export default {
   environmentPreset: "park",
   streetViewUrl:
     "https://www.google.com/maps/embed?pb=!4v1765461619249!6m8!1m7!1sCAoSHENJQUJJaEJBc3Zhc0lEUWpZcUFLcjA1dzR6ZlY.!2m2!1d-8.508176721821123!2d140.4121975531084!3f298.63194580731266!4f-1.823888927748314!5f0.7820865974627469",
-  description: "Monumen impian Indonesia 2085 di Merauke.",
+  description: "Terletak di Merauke, monumen futuristik berbentuk mirip perisai perang Papua ini menyimpan tabung kapsul berisi 7 mimpi anak bangsa dari 34 provinsi. Kapsul tersebut dilas permanen dan dijadwalkan untuk dibuka kembali pada tahun 2085 sebagai tolak ukur pencapaian visi Indonesia.",
   annotations: [
     {
       id: 1,

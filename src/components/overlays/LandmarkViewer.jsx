@@ -31,6 +31,7 @@ function LandmarkModel({
             description={anno.description}
             isOpen={activeId === currentId} 
             onSelect={onSelectAnnotation}
+            occlude={anno.occlude}
           />
         );
       })}
