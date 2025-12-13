@@ -15,6 +15,7 @@ export default {
   longitude: 107.604134,
   mapScale: scaled(0.08),
   popupScale: popup(1),
+  objectPosition: [0, -0.15, 0],
   zIndex: 0,
   island: "Jawa",
   environmentPreset: "park",

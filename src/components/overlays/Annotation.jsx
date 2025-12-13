@@ -25,7 +25,6 @@ function Annotation({ id, position, title, description, number, isOpen, onSelect
       <Html
         position={[0, 0, 0]}
         center
-        // HAPUS: distanceFactor={10}  <-- INI PENYEBABNYA
         occlude={occlude}
         zIndexRange={[100, 0]}
       >

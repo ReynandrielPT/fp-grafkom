@@ -15,6 +15,7 @@ export default {
   longitude: 127.51517860608296,
   mapScale: scaled(0.1),
   popupScale: popup(1.2),
+  objectPosition: [0, -0.15, 0],
   zIndex: 0,
   island: "Maluku",
   environmentPreset: "forest",

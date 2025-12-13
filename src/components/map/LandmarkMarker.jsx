@@ -5,13 +5,13 @@ import {
   useMemo,
   useRef,
   useState,
+  memo,
 } from "react";
 import { Billboard, Text, useCursor, useGLTF } from "@react-three/drei";
 import gsap from "gsap";
 import { Box3, MathUtils, Vector3, Shape } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { LANDMARK, COORDINATE_BOUNDS } from "../../config/mapConfig";
-// import { Billboard, Text, useCursor, useGLTF } from "@react-three/drei"; // Tambah useGLTF
 import { useFrame } from "@react-three/fiber";
 
 const DISABLE_TEXT_RAYCAST = () => null;
@@ -24,6 +24,9 @@ const IDLE_ANIMATION = {
   BASE_SCALE: 1.5,
   BASE_HEIGHT: 0.1,
 };
+
+// Shared loader instance for better memory management
+const sharedLoader = new GLTFLoader();
 
 /**
  * LandmarkMarker Component
@@ -53,6 +56,16 @@ function LandmarkMarker({
   const [hovered, setHovered] = useState(false);
   const hoverActive = hovered || externallyHovered;
   useCursor(hoverActive);
+  
+  // Store callbacks in refs to prevent effect re-triggers
+  const onSelectRef = useRef(onSelect);
+  const onModelReadyRef = useRef(onModelReady);
+  
+  // Update refs in effect to avoid React strict mode warnings
+  useEffect(() => {
+    onSelectRef.current = onSelect;
+    onModelReadyRef.current = onModelReady;
+  });
 
   // ini bentuk arrow dari pin point di dasar
   const arrowShape = useMemo(() => {
@@ -167,8 +180,8 @@ function LandmarkMarker({
     if (clonedScene || loadingRef.current) return;
     loadingRef.current = true;
     activeRef.current = true;
-    const loader = new GLTFLoader();
-    loader.load(
+    
+    sharedLoader.load(
       String(landmark.modelUri ?? ""),
       (data) => {
         loadingRef.current = false;
@@ -180,13 +193,16 @@ function LandmarkMarker({
         const clone = data.scene.clone(true);
         try {
           const box = new Box3().setFromObject(clone);
-          const size = new Vector3();
-          // compute size before using it
-          box.getSize(size);
           const center = box.getCenter(new Vector3());
-          // center the model at origin and lift it so its base sits on Y=0
-          clone.position.sub(center);
-          clone.position.y += size.y / 2;
+          
+          // Center horizontally (X and Z)
+          clone.position.x -= center.x;
+          clone.position.z -= center.z;
+          
+          // Normalize height - translate so lowest point sits at Y=0 (ground level)
+          // This ensures all models sit at the same baseline regardless of their internal structure
+          clone.position.y -= box.min.y;
+          
           clone.updateMatrixWorld();
         } catch (err) {
           console.warn("LandmarkMarker: failed to recenter scene", err);
@@ -268,9 +284,9 @@ function LandmarkMarker({
     runHoverAnimations(true);
     // notify parent that this landmark's model is ready/visible
     try {
-      onModelReady?.(landmark);
+      onModelReadyRef.current?.(landmark);
     } catch {}
-  }, [clonedScene, hoverActive, runHoverAnimations]);
+  }, [clonedScene, hoverActive, runHoverAnimations, landmark]);
 
   const labelContent = hoverActive && clonedScene ? "" : index;
 
@@ -343,7 +359,7 @@ function LandmarkMarker({
 
   const handleClick = (event) => {
     event.stopPropagation();
-    onSelect?.(landmark, getWorldPositionArray());
+    onSelectRef.current?.(landmark, getWorldPositionArray());
   };
 
   useEffect(() => {
@@ -521,7 +537,15 @@ function LandmarkMarker({
         </group>
       )}
       {clonedScene && (
-        <group ref={modelRef} scale={[0.0001, 0.0001, 0.0001]}>
+        <group 
+          ref={modelRef} 
+          position={[
+            (landmark.objectPosition?.[0] || 0),
+            0.15 + (landmark.objectPosition?.[1] || 0),
+            (landmark.objectPosition?.[2] || 0)
+          ]} 
+          scale={[0.0001, 0.0001, 0.0001]}
+        >
           <primitive object={clonedScene} />
         </group>
       )}

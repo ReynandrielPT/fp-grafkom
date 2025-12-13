@@ -15,6 +15,7 @@ export default {
   longitude: 128.08388902204044,
   mapScale: scaled(0.3),
   popupScale: popup(4.5),
+  objectPosition: [0, -0.15, 0],
   zIndex: 0,
   island: "Maluku",
   environmentPreset: "city",

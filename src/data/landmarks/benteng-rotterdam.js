@@ -15,6 +15,7 @@ export default {
   longitude: 119.405789,
   mapScale: scaled(0.02),
   popupScale: popup(4),
+  objectPosition: [0, -0.15, 0],
   zIndex: 0,
   island: "Sulawesi",
   environmentPreset: "city",

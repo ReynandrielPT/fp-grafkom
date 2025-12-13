@@ -22,6 +22,7 @@ function MonumentOverlay({
   const activePreset = landmark?.environmentPreset || "park";
   const activeAudio = landmark?.audioUri;
   const activeScale = landmark?.popupScale || 2;
+  const activeObjectPosition = landmark?.objectPosition || [0, 0, 0];
 
   const [isVisible, setIsVisible] = useState(false);
   const [showInfo, setShowInfo] = useState(true);
@@ -67,6 +68,7 @@ function MonumentOverlay({
           modelScale={activeScale}
           annotations={activeAnnotations}
           environmentPreset={activePreset}
+          objectPosition={activeObjectPosition}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10 pointer-events-none" />
       </div>

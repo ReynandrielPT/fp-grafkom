@@ -15,6 +15,7 @@ export default {
   longitude: 140.355,
   mapScale: scaled(0.4),
   popupScale: popup(2.5),
+  objectPosition: [0, -0.15, 0],
   zIndex: 0,
   island: "Papua",
   environmentPreset: "park",

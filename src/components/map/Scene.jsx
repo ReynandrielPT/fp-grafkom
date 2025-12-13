@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
   useMemo,
+  memo,
 } from "react";
 import { OrbitControls, useGLTF, useProgress } from "@react-three/drei";
 import { ORBIT_CONTROLS, LANDMARK } from "../../config/mapConfig";
@@ -28,6 +29,17 @@ import { resolveAssetPath } from "../../utils/assets";
 useGLTF.preload(resolveAssetPath("model/plane.glb"));
 useGLTF.preload(resolveAssetPath("model/train.glb"));
 useGLTF.preload(resolveAssetPath("model/rail.glb"));
+
+// Memoized LandmarkMarker wrapper to prevent unnecessary re-renders
+const MemoizedLandmarkMarker = memo(LandmarkMarker, (prevProps, nextProps) => {
+  // Only re-render if these specific props change
+  return (
+    prevProps.landmark.id === nextProps.landmark.id &&
+    prevProps.index === nextProps.index &&
+    prevProps.externallyHovered === nextProps.externallyHovered &&
+    prevProps.mapBounds === nextProps.mapBounds
+  );
+});
 
 /**
  * Scene Component
@@ -60,6 +72,18 @@ function Scene({
   const [trainPlay, setTrainPlay] = useState(false);
   const [trainStart, setTrainStart] = useState(null);
   const [trainEnd, setTrainEnd] = useState(null);
+  
+  // Store callbacks in refs to prevent child re-renders
+  const onPlaneAnimationCompleteRef = useRef(onPlaneAnimationComplete);
+  const onLandmarkSelectRef = useRef(onLandmarkSelect);
+  const onLandmarkModelReadyRef = useRef(onLandmarkModelReady);
+  
+  // Update refs in effect to avoid React strict mode warnings
+  useEffect(() => {
+    onPlaneAnimationCompleteRef.current = onPlaneAnimationComplete;
+    onLandmarkSelectRef.current = onLandmarkSelect;
+    onLandmarkModelReadyRef.current = onLandmarkModelReady;
+  });
 
   const activeLandmarks = useMemo(
     () => (Array.isArray(landmarks) ? landmarks : []),
@@ -68,15 +92,6 @@ function Scene({
 
   // Enable keyboard controls
   useKeyboardControls(controlsRef);
-
-  // Preload landmark models
-  useEffect(() => {
-    activeLandmarks.forEach((landmark) => {
-      if (landmark?.modelUri) {
-        useGLTF.preload(landmark.modelUri);
-      }
-    });
-  }, [activeLandmarks]);
 
   // Report loading progress
   useEffect(() => {
@@ -152,7 +167,7 @@ function Scene({
 
     // Check if already at target position
     if (isSamePosition(start, effectiveTarget)) {
-      onPlaneAnimationComplete?.({ targetPos: effectiveTarget });
+      onPlaneAnimationCompleteRef.current?.({ targetPos: effectiveTarget });
       return;
     }
 
@@ -196,7 +211,16 @@ function Scene({
       setPlaneEnd(e);
       setPlanePlay(true);
     }
-  }, [flyRequest, lastPosRef, onPlaneAnimationComplete, mapBounds]);
+  }, [flyRequest, lastPosRef, mapBounds]);
+
+  // Stable callbacks that don't cause child re-renders
+  const handleLandmarkSelect = useCallback((landmark, worldPos) => {
+    onLandmarkSelectRef.current?.(landmark, worldPos);
+  }, []);
+  
+  const handleLandmarkModelReady = useCallback((landmark) => {
+    onLandmarkModelReadyRef.current?.(landmark);
+  }, []);
 
   const handleAnimationComplete = useCallback(
     (res, setPlay) => {
@@ -204,19 +228,19 @@ function Scene({
         lastPosRef.current = res.targetPos;
       }
       setPlay(false);
-      onPlaneAnimationComplete?.(res);
+      onPlaneAnimationCompleteRef.current?.(res);
     },
-    [lastPosRef, onPlaneAnimationComplete]
+    [lastPosRef]
   );
 
   const handlePlaneComplete = useCallback(
     (res) => handleAnimationComplete(res, setPlanePlay),
-    [handleAnimationComplete, setPlanePlay]
+    [handleAnimationComplete]
   );
 
   const handleTrainComplete = useCallback(
     (res) => handleAnimationComplete(res, setTrainPlay),
-    [handleAnimationComplete, setTrainPlay]
+    [handleAnimationComplete]
   );
 
   return (
@@ -238,16 +262,16 @@ function Scene({
         <WaterSurface mapBounds={mapBounds} />
         <IndonesiaMap onBoundsReady={setMapBounds} />
         {activeLandmarks.map((landmark, i) => (
-          <LandmarkMarker
+          <MemoizedLandmarkMarker
             key={landmark.id}
             index={landmark.displayIndex ?? i + 1}
             mapBounds={mapBounds}
             landmark={landmark}
-            onSelect={onLandmarkSelect}
+            onSelect={handleLandmarkSelect}
             externallyHovered={Boolean(
               hoveredLandmarkId && landmark.id === hoveredLandmarkId
             )}
-            onModelReady={onLandmarkModelReady}
+            onModelReady={handleLandmarkModelReady}
           />
         ))}
         <PlaneAnimator

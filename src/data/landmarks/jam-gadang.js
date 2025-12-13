@@ -15,6 +15,7 @@ export default {
   longitude: 100.3693,
   mapScale: scaled(0.2),
   popupScale: popup(2),
+  objectPosition: [0, -0.15, 0],
   zIndex: 0,
   island: "Sumatra",
   environmentPreset: "city",

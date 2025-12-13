@@ -15,6 +15,7 @@ export default {
   longitude: 109.3425,
   mapScale: scaled(0.4),
   popupScale: popup(4),
+  objectPosition: [0, -0.15, 0],
   zIndex: 0,
   island: "Kalimantan",
   environmentPreset: "city",

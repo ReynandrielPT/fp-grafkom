@@ -15,6 +15,7 @@ export default {
   longitude: 99.065278,
   mapScale: scaled(0.08),
   popupScale: popup(1.2),
+  objectPosition: [0, -0.15, 0],
   zIndex: 0,
   island: "Sumatra",
   environmentPreset: "forest",

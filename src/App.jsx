@@ -25,7 +25,6 @@ function App() {
   const [hoveredLandmarkId, setHoveredLandmarkId] = useState(null);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [awaitingAnimationForId, setAwaitingAnimationForId] = useState(null);
   const [visitedLandmarkIds, setVisitedLandmarkIds] = useState(() => new Set());
   const [audioStarted, setAudioStarted] = useState(false);
 
@@ -71,38 +70,28 @@ function App() {
     // if an animation is pending, ignore additional clicks
     if (pendingFly) return;
 
-    // If re-selecting a previously visited landmark from the UI list,
-    // open its overlay immediately without re-running animation.
-    if (visitedLandmarkIds.has(landmark.id)) {
+    // If clicking the currently selected landmark (same position), open overlay directly
+    if (lastClickedLandmark?.id === landmark.id && isSamePosition(lastClickedPos, worldPos)) {
       setOverlayLandmark(landmark);
       setOverlayOpen(true);
-      setLastClickedLandmark(landmark);
       return;
     }
 
-    // trigger monument pop animation first via hover state
+    // Set hover state for visual feedback
     setHoveredLandmarkId(landmark.id);
-    setAwaitingAnimationForId(landmark.id);
-
-    // if clicked the same spot as last time, open overlay immediately (no animation)
-    if (isSamePosition(lastClickedPos, worldPos)) {
-      setOverlayLandmark(landmark);
-      setOverlayOpen(true);
-      setLastClickedLandmark(landmark);
-      if (worldPos) setLastClickedPos(worldPos);
-      return;
-    }
-    // actual animation will start when model signals ready (via callback)
-  };
-
-  const handleLandmarkModelReady = (landmark) => {
-    if (!landmark || landmark.id !== awaitingAnimationForId) return;
-    setAwaitingAnimationForId(null);
+    
+    // Start animation immediately - don't wait for model to load
+    // The animation uses world coordinates, not the 3D model
     setPendingFly({
       landmark,
-      targetPos: null,
+      targetPos: worldPos, // may be null from menu click, Scene will compute it
       originLandmark: lastClickedLandmark,
     });
+  };
+
+  // Keep this for backwards compatibility but animation starts immediately now
+  const handleLandmarkModelReady = (landmark) => {
+    // No longer needed for animation trigger
   };
 
   const handlePlaneAnimationComplete = (result) => {
@@ -221,7 +210,11 @@ function App() {
       {overlayOpen && overlayLandmark && (
         <MonumentOverlay
           open={overlayOpen}
-          onClose={() => setOverlayOpen(false)}
+          onClose={() => {
+            setOverlayOpen(false);
+            // Clear hover state so marker returns to normal
+            setHoveredLandmarkId(null);
+          }}
           pageMode
           landmark={overlayLandmark}
           // if the current path matches the landmark id, start the overlay showing Street View

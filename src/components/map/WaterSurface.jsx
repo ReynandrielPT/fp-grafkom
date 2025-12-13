@@ -60,7 +60,7 @@ function WaterSurface({ mapBounds }) {
       // Use a neutral/cool sun color to avoid brown tint
       sunColor: 0xd6ecff,
       // Warm, blueish water color
-      waterColor: "#0b3d5e",
+      waterColor: "#0bdee6",
       distortionScale: 0.08,
       fog: true,
     });
