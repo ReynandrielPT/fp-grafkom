@@ -8,7 +8,7 @@ import {
 } from "react";
 import { Billboard, Text, useCursor, useGLTF } from "@react-three/drei";
 import gsap from "gsap";
-import { Box3, MathUtils, Vector3 } from "three";
+import { Box3, MathUtils, Vector3, Shape } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { LANDMARK, COORDINATE_BOUNDS } from "../../config/mapConfig";
 // import { Billboard, Text, useCursor, useGLTF } from "@react-three/drei"; // Tambah useGLTF
@@ -21,8 +21,8 @@ const IDLE_ANIMATION = {
   FLOAT_AMPLITUDE: 0.05,
   HIDE_DISTANCE: 15,
   FADE_START_DISTANCE: 100,
-  BASE_SCALE: 1,
-  BASE_HEIGHT: 0.3,
+  BASE_SCALE: 1.5,
+  BASE_HEIGHT: 0.1,
 };
 
 /**
@@ -48,12 +48,27 @@ function LandmarkMarker({
   const modelRef = useRef();
 
   const pinRef = useRef();
-  // const { scene: pinScene } = useGLTF("model/3d_location.glb");
-  // const pinClone = useMemo(() => pinScene.clone(), [pinScene]);
+  const groundTargetRef = useRef();
 
   const [hovered, setHovered] = useState(false);
   const hoverActive = hovered || externallyHovered;
   useCursor(hoverActive);
+
+  // ini bentuk arrow dari pin point di dasar
+  const arrowShape = useMemo(() => {
+    const s = new Shape();
+    const w = 0.012; 
+    const h = 0.03;  
+    const indent = 0.01; 
+
+    s.moveTo(0, h);           
+    s.lineTo(w, 0);           
+    s.lineTo(0, indent);      
+    s.lineTo(-w, 0);          
+    s.lineTo(0, h);           
+    
+    return s;
+  }, []);
 
   // State for the loaded/cloned scene (loaded on hover)
   const [clonedScene, setClonedScene] = useState(null);
@@ -111,6 +126,11 @@ function LandmarkMarker({
     if (!mapBounds) return null;
     if (landmark.latitude == null || landmark.longitude == null) return null;
 
+    const GLOBAL_X_OFFSET = 0;
+    const GLOBAL_Z_OFFSET = 0.19;
+
+    const LATITUDE_SCALE_FIX = 1.0;
+
     const width = mapBounds.max.x - mapBounds.min.x;
     const depth = mapBounds.max.z - mapBounds.min.z;
     const longitudeRatio =
@@ -123,9 +143,9 @@ function LandmarkMarker({
     const clampedLonRatio = MathUtils.clamp(longitudeRatio, 0, 1);
     const clampedLatRatio = MathUtils.clamp(latitudeRatio, 0, 1);
 
-    const x = mapBounds.min.x + clampedLonRatio * width;
+    const x = mapBounds.min.x + clampedLonRatio * width + GLOBAL_X_OFFSET;
     const z =
-      mapBounds.max.z - clampedLatRatio * depth + (landmark.zIndex ?? 0);
+      mapBounds.max.z - (clampedLatRatio * LATITUDE_SCALE_FIX) * depth + (landmark.zIndex ?? 0) + GLOBAL_Z_OFFSET;;
     const y =
       mapBounds.min.y +
       (mapBounds.max.y - mapBounds.min.y) * 0.01 +
@@ -338,10 +358,11 @@ function LandmarkMarker({
   }, [externallyHovered, hovered, ensureHoverActive, stopAndUnload]);
 
   useFrame((state) => {
-    if (!pinRef.current) return;
+    if (!pinRef.current || !groundTargetRef.current) return;
 
     if (hoverActive) {
       pinRef.current.visible = false;
+      groundTargetRef.current.visible = false;
       return;
     }
 
@@ -350,39 +371,54 @@ function LandmarkMarker({
 
     if (distance > IDLE_ANIMATION.HIDE_DISTANCE) {
       pinRef.current.visible = false;
+      groundTargetRef.current.visible = false;
       return;
     }
 
     pinRef.current.visible = true;
+    groundTargetRef.current.visible = true;
 
     const time = state.clock.elapsedTime;
-    const offset = index * 0.5; // Agar tidak barengan semua
+    const offset = index * 0.5; 
+    const waveValue = Math.sin((time + offset) * IDLE_ANIMATION.FLOAT_SPEED);
 
-    const floatY =
-      Math.sin((time + offset) * IDLE_ANIMATION.FLOAT_SPEED) *
-      IDLE_ANIMATION.FLOAT_AMPLITUDE;
+    const pinAmplitude = 0.001;
+    const floatY = waveValue * pinAmplitude;
+    const floatYPin = waveValue * IDLE_ANIMATION.FLOAT_AMPLITUDE;
+    pinRef.current.position.y = floatYPin + IDLE_ANIMATION.BASE_HEIGHT;
+    groundTargetRef.current.position.y = floatY + IDLE_ANIMATION.BASE_HEIGHT - 0.155;
 
-    pinRef.current.position.y = floatY + IDLE_ANIMATION.BASE_HEIGHT;
+    const targetRadius = MathUtils.mapLinear(waveValue, 1, -1, 0.04, 0.03);
 
-    let scale = 1;
+    const targetOpacity = MathUtils.mapLinear(
+      waveValue, 
+      -1, 1,    
+      1, 0.3  
+    );
+
+
+    let distFactor = 1;
     if (distance > IDLE_ANIMATION.FADE_START_DISTANCE) {
-      scale = MathUtils.mapLinear(
+      distFactor = MathUtils.mapLinear(
         distance,
         IDLE_ANIMATION.FADE_START_DISTANCE,
         IDLE_ANIMATION.HIDE_DISTANCE,
         1,
         0
       );
-      // scale = MathUtils.mapLinear(
-      //       distance, IDLE_ANIMATION.FADE_START_DISTANCE, IDLE_ANIMATION.HIDE_DISTANCE, 1, 0
-      // );
     }
-    // scale = Math.max(0, scale);
-    pinRef.current.scale.setScalar(
-      Math.max(0, scale) * IDLE_ANIMATION.BASE_SCALE
-    );
-    // pinRef.current.scale.setScalar(IDLE_ANIMATION.BASE_SCALE);
-    // pinRef.current.scale.setScalar(Math.max(0, scale));
+    const finalOpacity = targetOpacity * Math.max(0, distFactor);
+
+
+    groundTargetRef.current.children.forEach((rotGroup) => {
+      const mesh = rotGroup.children[0];
+      if (mesh) {
+        mesh.position.y = targetRadius;
+        if (mesh.material) mesh.material.opacity = finalOpacity;
+      }
+    });
+
+    groundTargetRef.current.rotation.z -= 0.002;
   });
 
   if (!position) return null;
@@ -391,7 +427,7 @@ function LandmarkMarker({
     <group ref={markerRef} position={position} onClick={handleClick}>
       <mesh
         ref={registerLabelHitbox}
-        position={[0, 0.3, 0]}
+        position={[0, 0.1, 0]}
         onClick={handleClick}
         onPointerEnter={handlePointerEnter}
         onPointerLeave={handlePointerLeave}
@@ -404,6 +440,35 @@ function LandmarkMarker({
           depthWrite={false}
         />
       </mesh>
+
+      <group 
+        ref={groundTargetRef} 
+        rotation={[-Math.PI / 2, 0, 0]} 
+        position={[0, -0.06, 0]} // Sedikit di atas tanah
+      >
+        {[0, 1, 2].map((i) => (
+          <group key={i} rotation={[0, 0, (i * 2 * Math.PI) / 3]}>
+            
+            <mesh position={[0, 0.1, 0]} rotation={[0, 0, Math.PI]}>
+              <shapeGeometry args={[arrowShape]} />
+              <meshBasicMaterial 
+                color="#ffffff" 
+                transparent 
+                opacity={0.5} 
+                side={2} // DoubleSide
+                depthWrite={false}
+              />
+            </mesh>
+            
+          </group>
+        ))}
+
+        {/* <mesh position={[0, 0, 0]}>
+           <circleGeometry args={[0.015, 16]} />
+           <meshBasicMaterial color="white" transparent opacity={0.3} depthWrite={false}/>
+        </mesh> */}
+
+      </group>
 
       {!clonedScene && (
         <group ref={pinRef}>
