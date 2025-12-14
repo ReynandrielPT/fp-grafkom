@@ -20,7 +20,7 @@ export default {
   island: "Sulawesi",
   environmentPreset: "city",
   streetViewUrl:
-    "https://www.google.com/maps/embed?pb=!4v1716301234567!6m8!1m7!1sCAoSLEFGMVFpcE5xRDZqX0ZqX0ZqX0Zq!2m2!1d1.442345!2d124.841356!3f120!4f0!5f0.7820865974627469",
+    "https://www.google.com/maps/embed?pb=!4v1765703744064!6m8!1m7!1s5DihTlvB_PT8eFs95NwJag!2m2!1d1.438534194424963!2d124.8474468294712!3f151.98938052681711!4f33.42140923960817!5f0.7820865974627469",
   description:
     "Monumen Yesus Memberkati Manado adalah monumen setinggi 50 meter yang terletak di Manado, Sulawesi Utara. Patung ini menghadap ke kota dan teluk Manado, melambangkan perlindungan dan kasih sayang.",
   annotations: [

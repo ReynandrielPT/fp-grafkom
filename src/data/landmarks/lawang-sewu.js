@@ -20,7 +20,7 @@ export default {
   island: "Jawa",
   environmentPreset: "city",
   streetViewUrl:
-    "https://www.google.com/maps/embed?pb=!4v1716301234567!6m8!1m7!1sCAoSLEFGMVFpcE5xRDZqX0ZqX0ZqX0Zq!2m2!1d-6.983949!2d110.410434!3f120!4f0!5f0.7820865974627469",
+    "https://www.google.com/maps/embed?pb=!4v1765704866013!6m8!1m7!1sAyTYnbIpIyGY64LAG5VPWA!2m2!1d-6.983955950758874!2d110.4100014423883!3f104.39151701340751!4f4.949842090387861!5f0.4000000000000002",
   description:
     "Lawang Sewu ('Seribu Pintu') adalah gedung bersejarah di Semarang yang dulunya merupakan kantor pusat Nederlands-Indische Spoorweg Maatschappij (NIS). Bangunan ini terkenal dengan arsitekturnya yang megah, jumlah pintunya yang sangat banyak, dan sistem ventilasi bawah tanahnya.",
   annotations: [
