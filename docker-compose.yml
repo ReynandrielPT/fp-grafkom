@@ -8,6 +8,8 @@ services:
     container_name: indonesia-3d-map
     ports:
       - "80:5173"
+    volumes:
+      - ./public:/app/public:ro
     restart: unless-stopped
     environment:
       - NODE_ENV=production
