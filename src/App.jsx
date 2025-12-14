@@ -1,21 +1,23 @@
 import { useEffect, useState } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import InitialGuide from "./components/ui/InitialGuide";
 import IndonesiaCanvas from "./components/map/IndonesiaCanvas";
 import MonumentOverlay from "./components/overlays/MonumentOverlay";
 import LoadingScreen from "./components/ui/LoadingScreen";
 import LandmarkList from "./components/ui/LandmarkList";
-import Game from "./components/game/Game";
+import AppHeader from "./components/ui/AppHeader";
+import VolumeControl from "./components/ui/VolumeControl";
 import { landmarks } from "./data/landmarks";
 import { isSamePosition } from "./utils/coordinateUtils";
 import audioManager from "./utils/audioManager";
 import { resolveAssetPath } from "./utils/assets";
+import QuizView from "./components/quiz/QuizView";
 
 /**
  * App Component
  * Main application container managing state and UI interactions
  */
 function App() {
-  const [currentPage, setCurrentPage] = useState("map"); // "map" or "game"
   const [showGuide, setShowGuide] = useState(undefined);
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [overlayLandmark, setOverlayLandmark] = useState(null);
@@ -25,11 +27,13 @@ function App() {
   const [hoveredLandmarkId, setHoveredLandmarkId] = useState(null);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [awaitingAnimationForId, setAwaitingAnimationForId] = useState(null);
+  const [visitedLandmarkIds, setVisitedLandmarkIds] = useState(() => new Set());
   const [audioStarted, setAudioStarted] = useState(false);
 
   // Start background music after user interaction
   const startBackgroundMusic = () => {
-    if (audioStarted) {
+    if (!audioStarted) {
       const backgroundMusicPath = resolveAssetPath("music/jazz.mp3");
       audioManager.playBackgroundMusic(backgroundMusicPath);
       setAudioStarted(true);
@@ -70,21 +74,36 @@ function App() {
     // if an animation is pending, ignore additional clicks
     if (pendingFly) return;
 
-    // If clicking the currently selected landmark (same position), open overlay directly
-    if (lastClickedLandmark?.id === landmark.id && isSamePosition(lastClickedPos, worldPos)) {
+    // If re-selecting a previously visited landmark from the UI list,
+    // open its overlay immediately without re-running animation.
+    if (visitedLandmarkIds.has(landmark.id)) {
       setOverlayLandmark(landmark);
       setOverlayOpen(true);
+      setLastClickedLandmark(landmark);
       return;
     }
 
-    // Set hover state for visual feedback
+    // trigger monument pop animation first via hover state
     setHoveredLandmarkId(landmark.id);
-    
-    // Start animation immediately - don't wait for model to load
-    // The animation uses world coordinates, not the 3D model
+    setAwaitingAnimationForId(landmark.id);
+
+    // if clicked the same spot as last time, open overlay immediately (no animation)
+    if (isSamePosition(lastClickedPos, worldPos)) {
+      setOverlayLandmark(landmark);
+      setOverlayOpen(true);
+      setLastClickedLandmark(landmark);
+      if (worldPos) setLastClickedPos(worldPos);
+      return;
+    }
+    // actual animation will start when model signals ready (via callback)
+  };
+
+  const handleLandmarkModelReady = (landmark) => {
+    if (!landmark || landmark.id !== awaitingAnimationForId) return;
+    setAwaitingAnimationForId(null);
     setPendingFly({
       landmark,
-      targetPos: worldPos, // may be null from menu click, Scene will compute it
+      targetPos: null,
       originLandmark: lastClickedLandmark,
     });
   };
@@ -99,6 +118,12 @@ function App() {
       setOverlayLandmark(pendingFly.landmark);
       // remember which landmark was landed on
       setLastClickedLandmark(pendingFly.landmark);
+      // mark as visited so future clicks open overlay immediately
+      setVisitedLandmarkIds((prev) => {
+        const next = new Set(prev);
+        next.add(pendingFly.landmark.id);
+        return next;
+      });
     }
     setOverlayOpen(true);
   };
@@ -140,28 +165,8 @@ function App() {
     }
   }, []);
 
-  // Check URL for game route
-  useEffect(() => {
-    const path = window?.location?.pathname || "";
-    if (path === "/game" || path === "/geoguesser") {
-      setCurrentPage("game");
-    }
-  }, []);
-
-  // If on game page, render the game
-  if (currentPage === "game") {
-    return (
-      <Game
-        onBack={() => {
-          setCurrentPage("map");
-          window.history.pushState({}, "", "/");
-        }}
-      />
-    );
-  }
-
   return (
-    <>
+    <BrowserRouter>
       <LoadingScreen progress={loadingProgress} isComplete={!isLoading} />
 
       <InitialGuide
@@ -170,96 +175,57 @@ function App() {
         onInteraction={startBackgroundMusic}
       />
 
-      <button
-        className="fixed right-4 top-4 z-50 w-[7.5rem] bg-teal-primary/30 hover:bg-teal-primary/50 text-cyan-soft border border-teal-light/30 px-4 py-2 rounded-xl backdrop-blur-xl transition-all hover:scale-105 shadow-lg pointer-events-auto"
-        onClick={openGuide}
-        aria-label="Tampilkan Panduan"
-      >
-        <span className="flex items-center justify-center gap-2">
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          Panduan
-        </span>
-      </button>
+      <AppHeader onGuideClick={openGuide} />
+      {!isLoading && <VolumeControl />}
 
-      {/* Play Game Button - Below Panduan */}
-      {!isLoading && (
-        <button
-          className="fixed right-4 top-[4.5rem] z-50 w-[7.5rem] bg-gradient-to-r from-teal-primary/50 to-cyan-600/50 hover:from-teal-primary/70 hover:to-cyan-600/70 text-cyan-soft border border-teal-light/30 px-4 py-2 rounded-xl backdrop-blur-xl transition-all hover:scale-105 shadow-lg pointer-events-auto"
-          onClick={() => {
-            setCurrentPage("game");
-            window.history.pushState({}, "", "/game");
-          }}
-          aria-label="Play Game"
-        >
-          <span className="flex items-center justify-center gap-2">
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <>
+              <IndonesiaCanvas
+                className="w-screen h-screen"
+                landmarks={landmarks}
+                onLandmarkSelect={handleLandmarkSelect}
+                flyRequest={pendingFly}
+                onPlaneAnimationComplete={handlePlaneAnimationComplete}
+                hoveredLandmarkId={hoveredLandmarkId}
+                onLoadingProgress={handleLoadingProgress}
+                onLandmarkModelReady={handleLandmarkModelReady}
               />
-            </svg>
-            Game
-          </span>
-        </button>
-      )}
 
-      <LandmarkList
-        landmarks={landmarks}
-        onSelect={handleLandmarkSelect}
-        onHoverChange={(landmark) => setHoveredLandmarkId(landmark?.id ?? null)}
-        activeLandmarkId={hoveredLandmarkId}
-      />
+              <LandmarkList
+                landmarks={landmarks}
+                onSelect={handleLandmarkSelect}
+                onHoverChange={(landmark) =>
+                  setHoveredLandmarkId(landmark?.id ?? null)
+                }
+                activeLandmarkId={hoveredLandmarkId}
+              />
 
-      <div className="fixed left-0 top-0 w-screen h-screen pointer-events-none">
-        <IndonesiaCanvas
-          className="w-full h-full"
-          landmarks={landmarks}
-          onLandmarkSelect={handleLandmarkSelect}
-          flyRequest={pendingFly}
-          onPlaneAnimationComplete={handlePlaneAnimationComplete}
-          hoveredLandmarkId={hoveredLandmarkId}
-          onLoadingProgress={handleLoadingProgress}
-        />
-      </div>
-
-      {overlayOpen && overlayLandmark && (
-        <MonumentOverlay
-          open={overlayOpen}
-          onClose={() => {
-            setOverlayOpen(false);
-            // Clear hover state so marker returns to normal
-            setHoveredLandmarkId(null);
-          }}
-          pageMode
-          landmark={overlayLandmark}
-          // if the current path matches the landmark id, start the overlay showing Street View
-          startInStreetView={
-            window?.location?.pathname?.replace(/^\//, "") ===
-            overlayLandmark.id
+              {overlayOpen && overlayLandmark && (
+                <MonumentOverlay
+                  open={overlayOpen}
+                  onClose={() => {
+                    setOverlayOpen(false);
+                    setHoveredLandmarkId(null);
+                  }}
+                  pageMode
+                  landmark={overlayLandmark}
+                  startInStreetView={
+                    window?.location?.pathname?.replace(/^\//, "") ===
+                    overlayLandmark.id
+                  }
+                />
+              )}
+            </>
           }
         />
-      )}
-    </>
+        <Route path="/quiz" element={<QuizView />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
 export default App;
+
