@@ -23,8 +23,8 @@ function LoadingScreen({ progress, isComplete }) {
         {/* Logo/Title */}
         <div className="space-y-4">
           <div className="flex items-center justify-center gap-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-teal-light to-cyan-soft rounded-2xl flex items-center justify-center shadow-2xl animate-pulse">
-              <span className="text-4xl">🗺️</span>
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-2xl animate-pulse">
+              <img src="/petanesia.png" alt="Petanesia" className="w-full h-full object-contain" />
             </div>
             <h1 className="text-5xl md:text-7xl font-bold">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-light via-cyan-soft to-teal-light animate-pulse">

@@ -101,8 +101,8 @@ function InitialGuide({ show, onClose, onInteraction } = {}) {
 
         <div className="mb-8">
           <div className="flex items-center justify-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-teal-light to-cyan-soft rounded-lg flex items-center justify-center shadow-lg">
-              <span className="text-2xl">🗺️</span>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg">
+              <img src="/petanesia.png" alt="Petanesia" className="w-full h-full object-contain" />
             </div>
             <h2 className="text-silver-mist text-3xl font-bold tracking-tight">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-light via-cyan-soft to-teal-light">Petanesia</span>
