@@ -202,7 +202,7 @@ function App() {
       />
 
       <button
-        className="fixed right-5 top-5 z-50 w-40 bg-teal-primary/40 hover:bg-teal-primary/60 text-cyan-soft px-5 py-2.5 rounded-2xl backdrop-blur-xl transition-all hover:scale-105 pointer-events-auto ui-contrast-surface ui-readable text-base font-semibold"
+        className="fixed right-5 top-5 z-50 w-40 bg-gradient-to-br from-[#1a3a52] via-[#1e4a5f] to-[#2a5a6f] hover:from-[#1e4a5f] hover:via-[#2a5a6f] hover:to-[#1a3a52] text-cyan-soft px-5 py-2.5 rounded-2xl border border-teal-light/30 transition-all hover:scale-105 shadow-xl pointer-events-auto text-base font-semibold"
         onClick={openGuide}
         aria-label="Tampilkan Panduan"
       >
@@ -227,7 +227,7 @@ function App() {
       {/* Play Game Button - Below Panduan */}
       {!isLoading && (
         <button
-          className="fixed right-5 top-[5.5rem] z-50 w-40 bg-gradient-to-r from-teal-primary/60 to-cyan-600/60 hover:from-teal-primary/70 hover:to-cyan-600/70 text-cyan-soft px-5 py-2.5 rounded-2xl backdrop-blur-xl transition-all hover:scale-105 pointer-events-auto ui-contrast-surface ui-readable text-base font-semibold"
+          className="fixed right-5 top-[5.5rem] z-50 w-40 bg-gradient-to-br from-[#1a3a52] via-[#1e4a5f] to-[#2a5a6f] hover:from-[#1e4a5f] hover:via-[#2a5a6f] hover:to-[#1a3a52] text-cyan-soft px-5 py-2.5 rounded-2xl border border-teal-light/30 transition-all hover:scale-105 shadow-xl pointer-events-auto text-base font-semibold"
           onClick={() => {
             setCurrentPage("game");
             window.history.pushState({}, "", "/game");

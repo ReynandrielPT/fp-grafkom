@@ -65,8 +65,8 @@ export default function LandmarkList({
         <div className="p-6 pb-4 border-b border-teal-light/10 space-y-4 pt-10">
           {/* Petanesia Title - Larger and more prominent */}
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-teal-light to-cyan-soft rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
-              <span className="text-2xl">🗺️</span>
+            <div className="w-12 h-12 bg-gradient-to-br from-cyan-900 to-cyan-700 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0 p-2">
+              <img src="/petanesia.png" alt="Petanesia" className="w-full h-full object-contain" />
             </div>
             <div className="flex-1">
               <h1 className="text-2xl font-bold leading-tight">
