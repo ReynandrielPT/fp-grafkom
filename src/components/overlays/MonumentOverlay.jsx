@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import gsap from 'gsap';
 import { resolveAssetPath } from "../../utils/assets";
 import LandmarkViewer from "./LandmarkViewer";
 import InfoPanel from "./InfoPanel";
@@ -30,6 +31,10 @@ function MonumentOverlay({
   const [isVisible, setIsVisible] = useState(false);
   const [showInfo, setShowInfo] = useState(true);
   const [showStreetView, setShowStreetView] = useState(false);
+  
+  const overlayRef = useRef(null);
+  const canvasRef = useRef(null);
+  const closeButtonRef = useRef(null);
 
   // Play landmark audio when overlay opens, stop immediately when closing
   useEffect(() => {
@@ -54,18 +59,44 @@ function MonumentOverlay({
     }
   }, [open]);
 
+  // GSAP animations when overlay appears
+  useEffect(() => {
+    if (open && overlayRef.current && canvasRef.current) {
+      // Animate overlay fade in
+      gsap.fromTo(overlayRef.current,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.4, ease: 'power2.out' }
+      );
+      
+      // Animate 3D canvas zoom in
+      gsap.fromTo(canvasRef.current,
+        { scale: 0.8, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.6, ease: 'back.out(1.5)' }
+      );
+      
+      // Animate close button
+      if (closeButtonRef.current) {
+        gsap.fromTo(closeButtonRef.current,
+          { scale: 0, rotation: -180, opacity: 0 },
+          { scale: 1, rotation: 0, opacity: 1, duration: 0.5, delay: 0.3, ease: 'back.out(2)' }
+        );
+      }
+    }
+  }, [open]);
+
   if (!open && !isVisible) return null;
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] w-screen h-screen bg-gradient-to-br from-ocean-deep via-ocean-dark to-teal-primary/20 backdrop-blur-sm transition-opacity duration-500 ease-in-out ${
+      ref={overlayRef}
+      className={`fixed inset-0 z-[9999] w-screen h-screen bg-gradient-to-br from-ocean-deep via-ocean-dark to-teal-primary/20 backdrop-blur-sm ${
         open
           ? "opacity-100 pointer-events-auto"
           : "opacity-0 pointer-events-none"
       }`}
     >
       {/* 3D Canvas */}
-      <div className="absolute inset-0 w-full h-full">
+      <div ref={canvasRef} className="absolute inset-0 w-full h-full">
         <LandmarkViewer
           modelUri={activeUri}
           modelScale={activeScale}
@@ -86,6 +117,7 @@ function MonumentOverlay({
       {/* Close Button */}
       {!showStreetView && (
         <button
+          ref={closeButtonRef}
           onClick={() => {
             // Ensure landmark audio fades out immediately on manual close
             try {
