@@ -13,7 +13,7 @@ export default {
   audioUri: audio("benteng_rotterdam.mp3"),
   latitude: -5.13289,
   longitude: 119.405789,
-  mapScale: scaled(0.02),
+  mapScale: scaled(0.035),
   popupScale: popup(4),
   objectPosition: [0, -0.15, 0],
   zIndex: 0,

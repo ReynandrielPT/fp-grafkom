@@ -193,14 +193,23 @@ function Scene({
     const s = start || landmarkLeftStart || fallbackStart;
     const e = effectiveTarget;
 
-    // Decide transport type: train for same island, plane for different islands
+    // Decide transport type: train for same island (only Jawa or Sumatra), plane otherwise
     const originIsland = originLandmark?.island;
     const destIsland = landmark?.island;
+    
+    // Train only available for islands containing "Jawa" or "Sumatra"
+    const isTrainEligibleIsland = (island) => {
+      if (!island) return false;
+      const lowerIsland = island.toLowerCase();
+      return lowerIsland.includes("jawa") || lowerIsland.includes("sumatra");
+    };
+    
     const useTrain =
       originIsland &&
       destIsland &&
       originIsland === destIsland &&
-      originIsland !== "Archipelago";
+      originIsland !== "Archipelago" &&
+      isTrainEligibleIsland(originIsland);
 
     if (useTrain) {
       setTrainStart(s);

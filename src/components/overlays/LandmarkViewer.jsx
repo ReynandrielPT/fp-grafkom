@@ -1,8 +1,11 @@
-import { Suspense, useRef, useState, useEffect, useMemo, memo } from "react";
+import { Suspense, useRef, useState, useEffect, useMemo, memo, createContext } from "react";
 import { Canvas, useThree } from "@react-three/fiber"; 
 import { OrbitControls, Environment, useGLTF } from "@react-three/drei";
 import { Box3, Vector3 } from "three";
 import Annotation from "./Annotation";
+
+// Context for sharing center point across components
+const CenterPointContext = createContext(null);
 
 // Optimized model loader - clones once and applies performance optimizations
 const LandmarkModel = memo(function LandmarkModel({
@@ -16,26 +19,21 @@ const LandmarkModel = memo(function LandmarkModel({
   const { scene } = useGLTF(modelUri);
   
   // Clone scene and calculate centering offset for annotations
-  const { optimizedScene, centerOffset } = useMemo(() => {
+  const { optimizedScene, xzOffset } = useMemo(() => {
     const clone = scene.clone(true);
-    let offset = new Vector3(0, 0, 0);
     
-    // Center the model at origin for proper rotation
+    let xzOff = new Vector3(0, 0, 0);
+    
     try {
       const box = new Box3().setFromObject(clone);
-      const center = new Vector3();
-      const size = new Vector3();
-      box.getCenter(center);
-      box.getSize(size);
+      const center = box.getCenter(new Vector3());
       
-      // Calculate the offset we're applying
-      offset = center.clone();
-      offset.y -= size.y / 2; // Adjust for the lift
+      // Store the XZ offset that will be applied
+      xzOff = new Vector3(-center.x, 0, -center.z);
       
-      // Move model so its center is at origin
+      // Move model so its center (XZ plane) is at origin, but keep original height
       clone.position.sub(center);
-      // Lift it so base sits at Y=0
-      clone.position.y += size.y / 2;
+      clone.position.y = 0; // Reset Y to keep original height
       clone.updateMatrixWorld(true);
     } catch (err) {
       console.warn("Failed to center model:", err);
@@ -66,7 +64,7 @@ const LandmarkModel = memo(function LandmarkModel({
       }
     });
     
-    return { optimizedScene: clone, centerOffset: offset };
+    return { optimizedScene: clone, xzOffset: xzOff };
   }, [scene]);
 
   return (
@@ -79,11 +77,11 @@ const LandmarkModel = memo(function LandmarkModel({
       {annotations.map((anno, index) => {
         const currentId = anno.id || index;
         const isActive = activeId === currentId;
-        // Adjust annotation position by the centering offset
+        // Apply XZ offset to match the model centering transformation
         const adjustedPos = [
-          anno.position[0] - centerOffset.x,
-          anno.position[1] - centerOffset.y,
-          anno.position[2] - centerOffset.z
+          anno.position[0] + xzOffset.x,
+          anno.position[1],
+          anno.position[2] + xzOffset.z
         ];
         return (
           <Annotation
@@ -103,19 +101,17 @@ const LandmarkModel = memo(function LandmarkModel({
   );
 });
 
-// Efficient camera controller - calculates once, doesn't run every frame
-function CameraController({ modelUri }) {
+// Efficient camera controller with OrbitControls center based on lowest Y
+function CameraAndControlsController({ modelUri, controlsRef, onCenterPointReady }) {
   const { camera, scene } = useThree();
   const fitted = useRef(false);
-  const boundsRef = useRef(null);
   
   // Reset when model changes
   useEffect(() => {
     fitted.current = false;
-    boundsRef.current = null;
   }, [modelUri]);
   
-  // Calculate bounds once when model loads
+  // Calculate bounds once when model loads and set controls center
   useEffect(() => {
     if (fitted.current) return;
     
@@ -126,15 +122,64 @@ function CameraController({ modelUri }) {
         
         const center = box.getCenter(new Vector3());
         const size = box.getSize(new Vector3());
-        const maxDim = Math.max(size.x, size.y, size.z);
+        
+        // Get the lowest point of the object (minimum Y)
+        const lowestY = box.min.y;
+        
+        // Normalize based on height (Y-axis)
+        const height = size.y;
+        const width = size.x;
+        const depth = size.z;
+        
+        // Calculate camera distance based on object dimensions
+        // Use the maximum of width/depth to ensure full view, with height as reference
+        const horizontalExtent = Math.max(width, depth);
+        const verticalExtent = height;
+        
         const fov = camera.fov * (Math.PI / 180);
-        let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
+        const aspectRatio = window.innerWidth / window.innerHeight;
         
-        cameraZ *= 1.3; // Add padding
+        // Calculate distance needed to view horizontal extent
+        const horizontalDistance = horizontalExtent / 2 / Math.tan(fov / 2);
         
-        camera.position.set(center.x + cameraZ * 0.5, center.y + cameraZ * 0.3, center.z + cameraZ);
-        camera.lookAt(center);
+        // Calculate distance needed to view vertical extent
+        // Account for aspect ratio - vertical FOV is smaller on wide screens
+        const verticalFOV = 2 * Math.atan(Math.tan(fov / 2) / aspectRatio);
+        const verticalDistance = (verticalExtent / 2) / Math.tan(verticalFOV / 2);
+        
+        // Use the maximum distance needed, with proportional padding based on object size
+        const maxDistance = Math.max(horizontalDistance, verticalDistance);
+        const paddingFactor = 1.4; // Slightly more padding for better framing
+        const cameraDistance = maxDistance * paddingFactor;
+        
+        // Calculate look-at point based on lowest Y point
+        // This is the CENTER POINT shared across viewer and map
+        const lookAtPoint = new Vector3(
+          center.x,
+          lowestY + height * 0.5, // Middle of object measured from lowest point
+          center.z
+        );
+        
+        // Position camera with slight offset for better perspective
+        // Camera height is positioned to look at the look-at point
+        camera.position.set(
+          center.x + cameraDistance * 0.4,
+          lookAtPoint.y + height * 0.15, // Slightly above look-at point
+          center.z + cameraDistance
+        );
+        camera.lookAt(lookAtPoint);
         camera.updateProjectionMatrix();
+        
+        // Set OrbitControls center to the look-at point (based on lowest Y)
+        if (controlsRef.current) {
+          controlsRef.current.target.copy(lookAtPoint);
+          controlsRef.current.update();
+        }
+        
+        // Share the center point with parent component
+        if (onCenterPointReady) {
+          onCenterPointReady(lookAtPoint);
+        }
         
         fitted.current = true;
       } catch (err) {
@@ -143,7 +188,7 @@ function CameraController({ modelUri }) {
     }, 100);
     
     return () => clearTimeout(timer);
-  }, [modelUri, camera, scene]);
+  }, [modelUri, camera, scene, controlsRef, onCenterPointReady]);
   
   return null;
 }
@@ -156,17 +201,27 @@ function LandmarkViewer({
   annotations = [],
   environmentPreset = "park",
   objectPosition = [0, 0, 0],
+  onCenterPointChange = null,
 }) {
   const controlsRef = useRef();
   const [activeData, setActiveData] = useState({ id: null, position: null });
+  const [centerPoint, setCenterPoint] = useState(null);
 
   // Reset saat ganti model
   useEffect(() => {
     setActiveData({ id: null, position: null });
+    setCenterPoint(null);
     if (controlsRef.current) {
       controlsRef.current.autoRotate = true;
     }
   }, [modelUri]);
+
+  // Share center point with parent component
+  useEffect(() => {
+    if (onCenterPointChange && centerPoint) {
+      onCenterPointChange(centerPoint);
+    }
+  }, [centerPoint, onCenterPointChange]);
 
   const handleAnnotationSelect = (id, worldPosition) => {
     if (activeData.id === id) {
@@ -210,7 +265,11 @@ function LandmarkViewer({
       }}
       performance={{ min: 0.3, max: 1, debounce: 200 }}
     >
-      <CameraController modelUri={modelUri} />
+      <CameraAndControlsController 
+        modelUri={modelUri} 
+        controlsRef={controlsRef}
+        onCenterPointReady={setCenterPoint}
+      />
       
       {/* Minimal lighting setup */}
       <ambientLight intensity={0.8} />
@@ -236,8 +295,8 @@ function LandmarkViewer({
         makeDefault
         enableDamping={true}
         dampingFactor={0.15}
-        minDistance={3}
-        maxDistance={100}
+        minDistance={2}
+        maxDistance={150}
         rotateSpeed={0.5}
         zoomSpeed={0.7}
         panSpeed={0.5}
