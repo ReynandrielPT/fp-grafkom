@@ -21,5 +21,10 @@ jobs:
             git checkout main
             git pull --rebase origin main
             git status
+
+            sudo docker system prune -af --volumes
+            sudo docker-compose down -v
+            sudo docker-compose rm -f
+            
             sudo docker-compose down -v
             sudo docker-compose up --build --detach
