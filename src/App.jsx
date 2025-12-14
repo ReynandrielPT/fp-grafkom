@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom"; // Add this import
 import InitialGuide from "./components/ui/InitialGuide";
 import IndonesiaCanvas from "./components/map/IndonesiaCanvas";
 import MonumentOverlay from "./components/overlays/MonumentOverlay";
@@ -9,6 +10,7 @@ import { landmarks } from "./data/landmarks";
 import { isSamePosition } from "./utils/coordinateUtils";
 import audioManager from "./utils/audioManager";
 import { resolveAssetPath } from "./utils/assets";
+import QuizView from "./components/quiz/QuizView"; // Will be created later
 
 /**
  * App Component
@@ -161,7 +163,7 @@ function App() {
   }
 
   return (
-    <>
+    <BrowserRouter>
       <LoadingScreen progress={loadingProgress} isComplete={!isLoading} />
 
       <InitialGuide
@@ -258,8 +260,9 @@ function App() {
           }
         />
       )}
-    </>
+    </BrowserRouter>
   );
 }
 
 export default App;
+
