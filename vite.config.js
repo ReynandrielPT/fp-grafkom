@@ -6,6 +6,14 @@ export default defineConfig(({ command }) => ({
   plugins: [react()],
 
   publicDir: false,
+  server: {
+    host: '0.0.0.0', // Allow external connections
+    port: 5173,
+    watch: {
+      usePolling: true // For Docker file watching
+    }
+  },
+  
   build: {
     rollupOptions: {
       output: {
