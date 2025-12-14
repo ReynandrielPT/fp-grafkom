@@ -24,13 +24,7 @@ export default defineConfig(({ command }) => ({
       }
     },
     chunkSizeWarningLimit: 1000,
-  }
+  },
 
   base: command === 'build' ? '/fp-grafkom/' : '/',
-
-  server: {
-    host: true,
-    allowedHosts: ['indomap.kevin-andreas.com'],
-    port: 5173
-  }
 }))
