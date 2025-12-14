@@ -7,6 +7,7 @@ export default defineConfig(({ command }) => ({
 
   publicDir: false,
   server: {
+    allowedHosts: ['petanesia.kevin-andreas.com'],
     host: '0.0.0.0', // Allow external connections
     port: 5173,
     watch: {
