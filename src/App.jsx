@@ -201,11 +201,12 @@ function App() {
         onInteraction={startBackgroundMusic}
       />
 
-      <button
-        className="fixed right-5 top-5 z-50 w-40 bg-gradient-to-br from-[#1a3a52] via-[#1e4a5f] to-[#2a5a6f] hover:from-[#1e4a5f] hover:via-[#2a5a6f] hover:to-[#1a3a52] text-cyan-soft px-5 py-2.5 rounded-2xl border border-teal-light/30 transition-all hover:scale-105 shadow-xl pointer-events-auto text-base font-semibold"
-        onClick={openGuide}
-        aria-label="Tampilkan Panduan"
-      >
+      {!overlayOpen && (
+        <button
+          className="fixed right-5 top-5 z-50 w-40 bg-gradient-to-br from-[#1a3a52] via-[#1e4a5f] to-[#2a5a6f] hover:from-[#1e4a5f] hover:via-[#2a5a6f] hover:to-[#1a3a52] text-cyan-soft px-5 py-2.5 rounded-2xl border border-teal-light/30 transition-all hover:scale-105 shadow-xl pointer-events-auto text-base font-semibold"
+          onClick={openGuide}
+          aria-label="Tampilkan Panduan"
+        >
         <span className="flex items-center justify-center gap-2">
           <svg
             className="w-5 h-5"
@@ -223,9 +224,10 @@ function App() {
           Panduan
         </span>
       </button>
+      )}
 
       {/* Play Game Button - Below Panduan */}
-      {!isLoading && (
+      {!isLoading && !overlayOpen && (
         <button
           className="fixed right-5 top-[5.5rem] z-50 w-40 bg-gradient-to-br from-[#1a3a52] via-[#1e4a5f] to-[#2a5a6f] hover:from-[#1e4a5f] hover:via-[#2a5a6f] hover:to-[#1a3a52] text-cyan-soft px-5 py-2.5 rounded-2xl border border-teal-light/30 transition-all hover:scale-105 shadow-xl pointer-events-auto text-base font-semibold"
           onClick={() => {
@@ -253,24 +255,28 @@ function App() {
         </button>
       )}
 
-      <LandmarkList
-        landmarks={landmarks}
-        onSelect={handleLandmarkSelect}
-        onHoverChange={(landmark) => setHoveredLandmarkId(landmark?.id ?? null)}
-        activeLandmarkId={hoveredLandmarkId}
-      />
-
-      <div className="fixed left-0 top-0 w-screen h-screen pointer-events-none">
-        <IndonesiaCanvas
-          className="w-full h-full"
+      {!overlayOpen && (
+        <LandmarkList
           landmarks={landmarks}
-          onLandmarkSelect={handleLandmarkSelect}
-          flyRequest={pendingFly}
-          onPlaneAnimationComplete={handlePlaneAnimationComplete}
-          hoveredLandmarkId={hoveredLandmarkId}
-          onLoadingProgress={handleLoadingProgress}
+          onSelect={handleLandmarkSelect}
+          onHoverChange={(landmark) => setHoveredLandmarkId(landmark?.id ?? null)}
+          activeLandmarkId={hoveredLandmarkId}
         />
-      </div>
+      )}
+
+      {!overlayOpen && (
+        <div className="fixed left-0 top-0 w-screen h-screen pointer-events-none">
+          <IndonesiaCanvas
+            className="w-full h-full"
+            landmarks={landmarks}
+            onLandmarkSelect={handleLandmarkSelect}
+            flyRequest={pendingFly}
+            onPlaneAnimationComplete={handlePlaneAnimationComplete}
+            hoveredLandmarkId={hoveredLandmarkId}
+            onLoadingProgress={handleLoadingProgress}
+          />
+        </div>
+      )}
 
       {overlayOpen && overlayLandmark && (
         <MonumentOverlay
