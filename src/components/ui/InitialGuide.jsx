@@ -1,13 +1,38 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import gsap from 'gsap';
 
 function InitialGuide({ show, onClose, onInteraction } = {}) {
   const [isVisible, setIsVisible] = useState(false);
+  const overlayRef = useRef(null);
+  const modalRef = useRef(null);
 
   const handleClose = useCallback(() => {
-    setIsVisible(false);
-    localStorage.setItem("hasSeenGuide", "true");
-    if (typeof onInteraction === "function") onInteraction();
-    if (typeof onClose === "function") onClose();
+    if (overlayRef.current && modalRef.current) {
+      // Animate out before closing
+      gsap.to(modalRef.current, {
+        scale: 0.7,
+        opacity: 0,
+        y: 50,
+        duration: 0.3,
+        ease: 'power2.in'
+      });
+      gsap.to(overlayRef.current, {
+        opacity: 0,
+        duration: 0.3,
+        ease: 'power2.in',
+        onComplete: () => {
+          setIsVisible(false);
+          localStorage.setItem("hasSeenGuide", "true");
+          if (typeof onInteraction === "function") onInteraction();
+          if (typeof onClose === "function") onClose();
+        }
+      });
+    } else {
+      setIsVisible(false);
+      localStorage.setItem("hasSeenGuide", "true");
+      if (typeof onInteraction === "function") onInteraction();
+      if (typeof onClose === "function") onClose();
+    }
   }, [onClose, onInteraction]);
 
   useEffect(() => {
@@ -28,6 +53,22 @@ function InitialGuide({ show, onClose, onInteraction } = {}) {
   }, [show]);
 
   useEffect(() => {
+    if (isVisible && overlayRef.current && modalRef.current) {
+      // Animate overlay fade in
+      gsap.fromTo(overlayRef.current, 
+        { opacity: 0 },
+        { opacity: 1, duration: 0.3, ease: 'power2.out' }
+      );
+      
+      // Animate modal scale and fade in
+      gsap.fromTo(modalRef.current,
+        { scale: 0.7, opacity: 0, y: 50 },
+        { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: 'back.out(1.7)' }
+      );
+    }
+  }, [isVisible]);
+
+  useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape") handleClose();
     };
@@ -39,12 +80,14 @@ function InitialGuide({ show, onClose, onInteraction } = {}) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ocean-deep/80 backdrop-blur-sm transition-all duration-300"
+      ref={overlayRef}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ocean-deep/80 backdrop-blur-sm"
       onClick={handleClose}
       role="dialog"
       aria-modal="true"
     >
       <div
+        ref={modalRef}
         className="max-w-md w-full bg-gradient-to-br from-ocean-deep/95 via-ocean-dark/90 to-teal-primary/20 border border-teal-light/20 p-8 rounded-2xl shadow-2xl backdrop-blur-md relative mx-4"
         onClick={(e) => e.stopPropagation()}
       >

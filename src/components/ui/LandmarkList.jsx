@@ -27,17 +27,17 @@ export default function LandmarkList({
 
   return (
     <aside className={`fixed left-0 top-0 h-screen z-50 transition-all duration-300 ease-in-out ${
-      isOpen ? 'w-80' : 'w-12'
+      isOpen ? 'w-80' : 'w-0'
     } ${
       isOpen 
-        ? 'pointer-events-auto bg-gradient-to-br from-ocean-deep/98 via-ocean-dark/95 to-teal-primary/30 backdrop-blur-xl border-r border-teal-light/20 shadow-2xl' 
+        ? 'pointer-events-auto bg-gradient-to-br from-[#1a3a52] via-[#1e4a5f] to-[#2a5a6f] border-r border-teal-light/30 shadow-2xl' 
         : 'pointer-events-none bg-transparent'
     }`}>
       
       {/* Tab button - always visible */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`absolute ${isOpen ? 'right-3' : 'right-1'} top-4 z-10 p-2 rounded-lg bg-teal-primary/30 hover:bg-teal-primary/50 border border-teal-light/30 transition-all duration-300 hover:scale-110 pointer-events-auto`}
+        className={`fixed ${isOpen ? 'left-[17rem]' : 'left-4'} top-4 z-[60] p-2 rounded-lg bg-teal-primary/30 hover:bg-teal-primary/50 border border-teal-light/30 transition-all duration-300 hover:scale-110 pointer-events-auto`}
         title={isOpen ? 'Tutup Menu' : 'Buka Menu'}
       >
         <svg
