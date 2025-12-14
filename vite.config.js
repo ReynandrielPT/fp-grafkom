@@ -5,6 +5,18 @@ import react from '@vitejs/plugin-react'
 export default defineConfig(({ command }) => ({
   plugins: [react()],
 
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'three-vendor': ['three'],
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000,
+  }
+
   base: command === 'build' ? '/fp-grafkom/' : '/',
 
   server: {
