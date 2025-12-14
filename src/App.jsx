@@ -170,8 +170,6 @@ function App() {
         onInteraction={startBackgroundMusic}
       />
 
-      <AppHeader />
-
       <button
         className="fixed right-4 top-4 z-50 w-[7.5rem] bg-teal-primary/30 hover:bg-teal-primary/50 text-cyan-soft border border-teal-light/30 px-4 py-2 rounded-xl backdrop-blur-xl transition-all hover:scale-105 shadow-lg pointer-events-auto"
         onClick={openGuide}

@@ -64,7 +64,7 @@ export const ANIMATION_POSITION = {
 // Transport Animation Configuration
 export const TRANSPORT = {
   PLANE_SPEED: 4.5, // world units per second
-  TRAIN_SPEED: 2.8, // world units per second
+  TRAIN_SPEED: 4.5, // world units per second
   PLANE_SCALE: 0.014,
   TRAIN_SCALE: 0.012,
   TRAIN_Y_OFFSET: 0.2,

@@ -1,8 +1,11 @@
-import { Suspense, useRef, useEffect, useMemo, memo } from "react";
+import { Suspense, useRef, useState, useEffect, useMemo, memo, createContext } from "react";
 import { Canvas, useThree } from "@react-three/fiber"; 
 import { OrbitControls, Environment, useGLTF } from "@react-three/drei";
 import { Box3, Vector3 } from "three";
 import Annotation from "./Annotation";
+
+// Context for sharing center point across components
+const CenterPointContext = createContext(null);
 
 // Optimized model loader - clones once and applies performance optimizations
 const LandmarkModel = memo(function LandmarkModel({
@@ -59,6 +62,7 @@ const LandmarkModel = memo(function LandmarkModel({
     }
     
     return { optimizedScene: clone, xzOffset: xzOff };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scene, modelUri]);
 
   return (
@@ -101,7 +105,6 @@ function CameraAndControlsController({ modelUri, controlsRef, onCenterPointReady
   // Calculate bounds and position camera - runs on every frame until successful
   useEffect(() => {
     let frameId = null;
-    let hasCompletedSetup = false;
     
     const setupCamera = () => {
       try {
@@ -168,8 +171,6 @@ function CameraAndControlsController({ modelUri, controlsRef, onCenterPointReady
         if (onCenterPointReady) {
           onCenterPointReady(lookAtPoint);
         }
-        
-        hasCompletedSetup = true;
       } catch (err) {
         console.warn("Failed to fit camera:", err);
       }

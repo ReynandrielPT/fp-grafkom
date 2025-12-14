@@ -66,7 +66,7 @@ function TrainAnimator({ start, end, play, onComplete }) {
     const startPos = new Vector3(start[0], TRANSPORT.TRAIN_Y_OFFSET, start[2]);
     const endPos = new Vector3(end[0], TRANSPORT.TRAIN_Y_OFFSET, end[2]);
     const distance = startPos.distanceTo(endPos);
-    const duration = Math.max(distance / TRANSPORT.TRAIN_SPEED, 2.5);
+    const duration = Math.max(distance / TRANSPORT.TRAIN_SPEED, 1.7);
 
     ref.current.position.copy(startPos);
     ref.current.scale.setScalar(TRANSPORT.TRAIN_SCALE);
