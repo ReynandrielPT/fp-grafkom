@@ -58,7 +58,7 @@ function MonumentOverlay({
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] w-screen h-screen bg-black transition-opacity duration-500 ease-in-out ${
+      className={`fixed inset-0 z-[9999] w-screen h-screen bg-gradient-to-br from-ocean-deep via-ocean-dark to-teal-primary/20 backdrop-blur-sm transition-opacity duration-500 ease-in-out ${
         open
           ? "opacity-100 pointer-events-auto"
           : "opacity-0 pointer-events-none"

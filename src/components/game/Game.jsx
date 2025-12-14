@@ -1,9 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { landmarks } from "../../data/landmarks";
+import GameViewer from "./GameViewer";
 
-/**
- * Shuffle array using Fisher-Yates algorithm
- */
+// Randomize array using Fisher-Yates algorithm
 function shuffleArray(array) {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -13,17 +12,11 @@ function shuffleArray(array) {
   return shuffled;
 }
 
-/**
- * Get random landmarks excluding the correct one and used landmarks
- * Always returns the requested count of options
- */
 function getRandomOptions(correctLandmark, allLandmarks, usedIds, count = 3) {
-  // First try: get options excluding used landmarks
   let others = allLandmarks.filter(
     (l) => l.id !== correctLandmark.id && !usedIds.has(l.id)
   );
   
-  // If not enough options available (all used), get any landmarks except correct
   if (others.length < count) {
     others = allLandmarks.filter(
       (l) => l.id !== correctLandmark.id
@@ -31,28 +24,22 @@ function getRandomOptions(correctLandmark, allLandmarks, usedIds, count = 3) {
   }
   
   const shuffled = shuffleArray(others);
-  // Ensure we always return exactly count options
+
   return shuffled.slice(0, count).length === count 
     ? shuffled.slice(0, count)
     : shuffled.slice(0, Math.min(count, shuffled.length));
 }
 
-/**
- * Game Component
- * A guessing game where users identify Indonesian landmarks from street view images
- */
 function Game({ onBack }) {
-  // Filter landmarks that have street view
   const validLandmarks = useMemo(
     () =>
       landmarks.filter(
-        (l) =>
-          l.streetViewUrl &&
-          !String(l.streetViewUrl).includes("undefined")
+        (l) => l.modelUri // Only need a model to be playable
       ),
     []
   );
 
+  // Game state: current round and scoring
   const [currentLandmark, setCurrentLandmark] = useState(null);
   const [options, setOptions] = useState([]);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -62,58 +49,47 @@ function Game({ onBack }) {
   const [totalRounds] = useState(10);
   const [gameOver, setGameOver] = useState(false);
   const [showResult, setShowResult] = useState(false);
-  const [, setUsedLandmarkIds] = useState(new Set());
+  const [usedLandmarkIds, setUsedLandmarkIds] = useState(new Set());
+  const [showStreetView, setShowStreetView] = useState(false);
 
-  // Start a new round
+  // Generate new landmark and 4 multiple choice options
   const startNewRound = useCallback(() => {
     if (validLandmarks.length < 4) {
       console.warn("Not enough landmarks");
       return;
     }
 
-    setUsedLandmarkIds((prevUsedIds) => {
-      let availableLandmarks = validLandmarks.filter(
-        (l) => !prevUsedIds.has(l.id)
-      );
+    let availableLandmarks = validLandmarks.filter(
+      (l) => !usedLandmarkIds.has(l.id)
+    );
 
-      // If all used, reset for new game
-      if (availableLandmarks.length === 0) {
-        prevUsedIds = new Set();
-        availableLandmarks = validLandmarks;
-      }
+    if (availableLandmarks.length === 0) {
+      setUsedLandmarkIds(new Set());
+      availableLandmarks = validLandmarks;
+    }
 
-      // Pick random landmark as the correct answer
-      const randomIndex = Math.floor(Math.random() * availableLandmarks.length);
-      const correct = availableLandmarks[randomIndex];
+    const randomIndex = Math.floor(Math.random() * availableLandmarks.length);
+    const correct = availableLandmarks[randomIndex];
 
-      // Get 3 wrong options (always tries to get 3, even if reusing)
-      const wrongOptions = getRandomOptions(
-        correct,
-        validLandmarks,
-        prevUsedIds,
-        3
-      );
+    const wrongOptions = getRandomOptions(
+      correct,
+      validLandmarks,
+      usedLandmarkIds,
+      3
+    );
 
-      // Combine and shuffle all options (ensure exactly 4 options)
-      const allOptions = shuffleArray([correct, ...wrongOptions]);
-      
-      // Safety check: ensure we have exactly 4 options
-      if (allOptions.length !== 4) {
-        console.warn(`Expected 4 options, got ${allOptions.length}`);
-      }
+    const allOptions = shuffleArray([correct, ...wrongOptions]);
 
-      setCurrentLandmark(correct);
-      setOptions(allOptions);
-      setSelectedAnswer(null);
-      setIsCorrect(null);
-      setShowResult(false);
+    setCurrentLandmark(correct);
+    setOptions(allOptions);
+    setSelectedAnswer(null);
+    setIsCorrect(null);
+    setShowResult(false);
 
-      // Return new Set with added landmark
-      return new Set(prevUsedIds).add(correct.id);
-    });
-  }, [validLandmarks]);
+    setUsedLandmarkIds((prev) => new Set(prev).add(correct.id));
+  }, [validLandmarks, usedLandmarkIds]);
 
-  // Handle answer selection
+  // Check answer and update score
   const handleSelectAnswer = (landmark) => {
     if (selectedAnswer !== null) return; // Already answered
 
@@ -127,7 +103,7 @@ function Game({ onBack }) {
     }
   };
 
-  // Handle next round
+  // Proceed to next round or game over
   const handleNextRound = () => {
     if (round >= totalRounds) {
       setGameOver(true);
@@ -137,21 +113,27 @@ function Game({ onBack }) {
     }
   };
 
-  // Handle restart game
+  // Reset game state
   const handleRestartGame = () => {
     setScore(0);
     setRound(1);
     setGameOver(false);
+    setUsedLandmarkIds(new Set());
     startNewRound();
   };
 
-  // Initialize game only once
+  // Initialize game on mount
   useEffect(() => {
     if (!currentLandmark) {
       startNewRound();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Reset street view toggle on model change
+  useEffect(() => {
+    setShowStreetView(false);
+  }, [currentLandmark]);
 
   if (!currentLandmark) {
     return (
@@ -230,9 +212,23 @@ function Game({ onBack }) {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4">
-        {/* Street View */}
+        {/* 3D Model Viewer or Street View */}
         <div className="flex-1 relative rounded-2xl overflow-hidden border border-teal-light/30 shadow-xl min-h-[300px] lg:min-h-0 bg-slate-900">
-          {currentLandmark.streetViewUrl ? (
+          {/* Toggle Button */}
+          {currentLandmark.streetViewUrl &&
+            !String(currentLandmark.streetViewUrl).includes("undefined") && (
+              <button
+                onClick={() => setShowStreetView(!showStreetView)}
+                className="absolute top-4 right-4 z-10 px-3 py-2 bg-slate-800/80 hover:bg-slate-700 text-cyan-soft rounded-lg text-sm font-semibold transition-all backdrop-blur-sm border border-teal-light/20 hover:border-teal-light/50"
+              >
+                {showStreetView ? "Lihat 3D" : "Lihat Street View"}
+              </button>
+            )}
+
+          {/* View Content */}
+          {showStreetView &&
+          currentLandmark.streetViewUrl &&
+          !String(currentLandmark.streetViewUrl).includes("undefined") ? (
             <iframe
               src={currentLandmark.streetViewUrl}
               className="w-full h-full border-0"
@@ -240,10 +236,17 @@ function Game({ onBack }) {
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
             ></iframe>
+          ) : currentLandmark.modelUri ? (
+            <GameViewer
+              modelUri={currentLandmark.modelUri}
+              modelScale={currentLandmark.popupScale || 1.5}
+              environmentPreset={currentLandmark.environmentPreset || "park"}
+              objectPosition={currentLandmark.objectPosition || [0, 0, 0]}
+            />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-cyan-soft text-center p-4">
               <div>
-                <p className="text-lg font-semibold mb-2">Street View tidak tersedia</p>
+                <p className="text-lg font-semibold mb-2">Tampilan tidak tersedia</p>
               </div>
             </div>
           )}

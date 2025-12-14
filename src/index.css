@@ -2,14 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-html,
-body,
-#root {
+html, body, #root {
   height: 100%;
 }
 
-html,
-body {
+html, body {
   @apply m-0 overflow-hidden;
 }
 
@@ -32,22 +29,5 @@ body {
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     @apply bg-teal-primary/50;
   }
-  /* Improve readability on transparent UI without using shadows */
-  .ui-readable {
-    color: #eaf8ff; /* light text for contrast */
-    -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.55);
-    text-rendering: optimizeLegibility;
-  }
-  .ui-contrast-surface {
-    border: 1px solid rgba(255, 255, 255, 0.75);
-    outline: 1px solid rgba(0, 0, 0, 0.25);
-    outline-offset: -2px; /* subtle inner outline to increase edge contrast */
-    background-clip: padding-box; /* keep border distinct on transparent bg */
-  }
-  /* Apply contrast edges to any blurred transparent surfaces */
-  [class*="backdrop-blur"] {
-    border: 1px solid rgba(255, 255, 255, 0.65);
-    outline: 1px solid rgba(0, 0, 0, 0.2);
-    outline-offset: -2px;
-  }
 }
+

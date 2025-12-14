@@ -6,13 +6,11 @@ import {
   RepeatWrapping,
   Vector3,
   NormalBlending,
-  Color,
 } from "three";
 import { Water } from "three/examples/jsm/objects/Water.js";
 
 const WATER_NORMALS_URL =
   "https://threejs.org/examples/textures/waternormals.jpg";
-const SUN_DIRECTION = new Vector3(0.6, 1, 0.4);
 
 /**
  * WaterSurface Component
@@ -40,7 +38,7 @@ function WaterSurface({ mapBounds }) {
     const expansion = 2.5;
     const width = Math.max(size.x * expansion, 1200);
     const depth = Math.max(size.z * expansion, 1200);
-    // Align the water base with the map's base
+    // Align the water base position
     const positionY = mapBounds.min.y;
 
     return { width, depth, center, positionY };
@@ -56,10 +54,6 @@ function WaterSurface({ mapBounds }) {
       textureWidth: 512,
       textureHeight: 512,
       waterNormals,
-      sunDirection: SUN_DIRECTION.clone().normalize(),
-      // Use a neutral/cool sun color to avoid brown tint
-      sunColor: 0xd6ecff,
-      // Warm, blueish water color
       waterColor: "#0bdee6",
       distortionScale: 0.08,
       fog: true,
@@ -73,17 +67,9 @@ function WaterSurface({ mapBounds }) {
     if (material) {
       if (material.uniforms) {
         const uniforms = material.uniforms;
-        if (uniforms.alpha) uniforms.alpha.value = 1;
-        if (uniforms.sunColor) {
-          const sunUniform = uniforms.sunColor.value;
-          if (sunUniform instanceof Color) {
-            sunUniform.set(0xd6ecff);
-          } else {
-            uniforms.sunColor.value = 0xd6ecff;
-          }
-        }
+        if (uniforms.alpha) uniforms.alpha.value = 0.8;
         if (uniforms.distortionScale) uniforms.distortionScale.value = 0.08;
-        if (uniforms.reflectivity) uniforms.reflectivity.value = 0.2;
+        if (uniforms.reflectivity) uniforms.reflectivity.value = 0.3;
       }
       material.transparent = false;
       material.opacity = 1;
