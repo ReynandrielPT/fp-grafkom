@@ -1,11 +1,8 @@
-import { Suspense, useRef, useState, useEffect, useMemo, memo, createContext } from "react";
+import { Suspense, useRef, useEffect, useMemo, memo } from "react";
 import { Canvas, useThree } from "@react-three/fiber"; 
 import { OrbitControls, Environment, useGLTF } from "@react-three/drei";
 import { Box3, Vector3 } from "three";
 import Annotation from "./Annotation";
-
-// Context for sharing center point across components
-const CenterPointContext = createContext(null);
 
 // Optimized model loader - clones once and applies performance optimizations
 const LandmarkModel = memo(function LandmarkModel({
@@ -18,7 +15,7 @@ const LandmarkModel = memo(function LandmarkModel({
 }) {
   const { scene } = useGLTF(modelUri);
   
-  // Clone scene and calculate centering offset for annotations
+  // Clone scene and calculate centering offset for annotations - DOES NOT modify position
   const { optimizedScene, xzOffset } = useMemo(() => {
     const clone = scene.clone(true);
     
@@ -28,67 +25,63 @@ const LandmarkModel = memo(function LandmarkModel({
       const box = new Box3().setFromObject(clone);
       const center = box.getCenter(new Vector3());
       
-      // Store the XZ offset that will be applied
+      // Store the XZ offset for annotations but DON'T move the model itself
       xzOff = new Vector3(-center.x, 0, -center.z);
       
-      // Move model so its center (XZ plane) is at origin, but keep original height
-      clone.position.sub(center);
-      clone.position.y = 0; // Reset Y to keep original height
-      clone.updateMatrixWorld(true);
-    } catch (err) {
-      console.warn("Failed to center model:", err);
-    }
-    
-    // Apply performance optimizations to all meshes
-    clone.traverse((child) => {
-      if (child.isMesh) {
-        // Enable frustum culling
-        child.frustumCulled = true;
-        
-        // Disable shadows for performance
-        child.castShadow = false;
-        child.receiveShadow = false;
-        
-        // Optimize materials
-        if (child.material) {
-          // Reduce environment map intensity for cheaper rendering
-          if (child.material.envMapIntensity !== undefined) {
-            child.material.envMapIntensity = 0.3;
-          }
-          // Disable expensive material features
-          child.material.flatShading = false;
-          if (child.material.map) {
-            child.material.map.anisotropy = 0;
+      // Apply performance optimizations to all meshes
+      clone.traverse((child) => {
+        if (child.isMesh) {
+          // Enable frustum culling
+          child.frustumCulled = true;
+          
+          // Disable shadows for performance
+          child.castShadow = false;
+          child.receiveShadow = false;
+          
+          // Optimize materials
+          if (child.material) {
+            // Reduce environment map intensity for cheaper rendering
+            if (child.material.envMapIntensity !== undefined) {
+              child.material.envMapIntensity = 0.3;
+            }
+            // Disable expensive material features
+            child.material.flatShading = false;
+            if (child.material.map) {
+              child.material.map.anisotropy = 0;
+            }
           }
         }
-      }
-    });
+      });
+      
+      clone.updateMatrixWorld(true);
+    } catch (err) {
+      console.warn("Failed to process model:", err);
+    }
     
     return { optimizedScene: clone, xzOffset: xzOff };
-  }, [scene]);
+  }, [scene, modelUri]);
 
   return (
     <group 
       scale={modelScale}
-      position={objectPosition}
+      position={[
+        objectPosition[0] + xzOffset.x,
+        objectPosition[1],
+        objectPosition[2] + xzOffset.z
+      ]}
     >
       <primitive object={optimizedScene} />
       
       {annotations.map((anno, index) => {
         const currentId = anno.id || index;
         const isActive = activeId === currentId;
-        // Apply XZ offset to match the model centering transformation
-        const adjustedPos = [
-          anno.position[0] + xzOffset.x,
-          anno.position[1],
-          anno.position[2] + xzOffset.z
-        ];
+        // Annotations don't need offset since the group is already centered
         return (
           <Annotation
             key={currentId}
             id={currentId}
             number={index + 1}
-            position={adjustedPos}
+            position={anno.position}
             title={anno.title}
             description={anno.description}
             isOpen={isActive} 
@@ -104,21 +97,20 @@ const LandmarkModel = memo(function LandmarkModel({
 // Efficient camera controller with OrbitControls center based on lowest Y
 function CameraAndControlsController({ modelUri, controlsRef, onCenterPointReady }) {
   const { camera, scene } = useThree();
-  const fitted = useRef(false);
   
-  // Reset when model changes
+  // Calculate bounds and position camera - runs on every frame until successful
   useEffect(() => {
-    fitted.current = false;
-  }, [modelUri]);
-  
-  // Calculate bounds once when model loads and set controls center
-  useEffect(() => {
-    if (fitted.current) return;
+    let frameId = null;
+    let hasCompletedSetup = false;
     
-    const timer = setTimeout(() => {
+    const setupCamera = () => {
       try {
         const box = new Box3().setFromObject(scene);
-        if (box.isEmpty()) return;
+        if (box.isEmpty()) {
+          // Scene not ready, try next frame
+          frameId = requestAnimationFrame(setupCamera);
+          return;
+        }
         
         const center = box.getCenter(new Vector3());
         const size = box.getSize(new Vector3());
@@ -132,7 +124,6 @@ function CameraAndControlsController({ modelUri, controlsRef, onCenterPointReady
         const depth = size.z;
         
         // Calculate camera distance based on object dimensions
-        // Use the maximum of width/depth to ensure full view, with height as reference
         const horizontalExtent = Math.max(width, depth);
         const verticalExtent = height;
         
@@ -143,51 +134,55 @@ function CameraAndControlsController({ modelUri, controlsRef, onCenterPointReady
         const horizontalDistance = horizontalExtent / 2 / Math.tan(fov / 2);
         
         // Calculate distance needed to view vertical extent
-        // Account for aspect ratio - vertical FOV is smaller on wide screens
         const verticalFOV = 2 * Math.atan(Math.tan(fov / 2) / aspectRatio);
         const verticalDistance = (verticalExtent / 2) / Math.tan(verticalFOV / 2);
         
-        // Use the maximum distance needed, with proportional padding based on object size
+        // Use the maximum distance needed
         const maxDistance = Math.max(horizontalDistance, verticalDistance);
-        const paddingFactor = 1.4; // Slightly more padding for better framing
+        const paddingFactor = 1.4;
         const cameraDistance = maxDistance * paddingFactor;
         
-        // Calculate look-at point based on lowest Y point
-        // This is the CENTER POINT shared across viewer and map
+        // Calculate look-at point at vertical center (from lowest Y)
         const lookAtPoint = new Vector3(
           center.x,
-          lowestY + height * 0.5, // Middle of object measured from lowest point
+          lowestY + height * 0.5,
           center.z
         );
         
-        // Position camera with slight offset for better perspective
-        // Camera height is positioned to look at the look-at point
+        // Position camera
         camera.position.set(
           center.x + cameraDistance * 0.4,
-          lookAtPoint.y + height * 0.15, // Slightly above look-at point
+          lookAtPoint.y + height * 0.15,
           center.z + cameraDistance
         );
         camera.lookAt(lookAtPoint);
         camera.updateProjectionMatrix();
         
-        // Set OrbitControls center to the look-at point (based on lowest Y)
+        // Set OrbitControls target
         if (controlsRef.current) {
           controlsRef.current.target.copy(lookAtPoint);
           controlsRef.current.update();
         }
         
-        // Share the center point with parent component
+        // Share center point
         if (onCenterPointReady) {
           onCenterPointReady(lookAtPoint);
         }
         
-        fitted.current = true;
+        hasCompletedSetup = true;
       } catch (err) {
         console.warn("Failed to fit camera:", err);
       }
-    }, 100);
+    };
     
-    return () => clearTimeout(timer);
+    // Start setup on next frame
+    frameId = requestAnimationFrame(setupCamera);
+    
+    return () => {
+      if (frameId) {
+        cancelAnimationFrame(frameId);
+      }
+    };
   }, [modelUri, camera, scene, controlsRef, onCenterPointReady]);
   
   return null;

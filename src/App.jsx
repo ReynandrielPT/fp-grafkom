@@ -4,7 +4,6 @@ import IndonesiaCanvas from "./components/map/IndonesiaCanvas";
 import MonumentOverlay from "./components/overlays/MonumentOverlay";
 import LoadingScreen from "./components/ui/LoadingScreen";
 import LandmarkList from "./components/ui/LandmarkList";
-import AppHeader from "./components/ui/AppHeader";
 import Game from "./components/game/Game";
 import { landmarks } from "./data/landmarks";
 import { isSamePosition } from "./utils/coordinateUtils";
