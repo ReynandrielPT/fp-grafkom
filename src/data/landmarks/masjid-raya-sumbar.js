@@ -10,7 +10,7 @@ export default {
   id: "masjid-raya-sumbar",
   name: "Masjid Raya Sumatera Barat",
   modelUri: model("masjid_raya_sumatera_barat.glb"),
-  audioUri: audio("masjid_raya_sumbar.mp3"),
+  audioUri: audio("masjid_raya_sumatera_barat.mp3"),
   latitude: -0.947083,
   longitude: 100.417181,
   mapScale: scaled(0.04),

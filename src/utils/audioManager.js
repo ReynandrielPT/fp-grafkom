@@ -17,6 +17,8 @@ class AudioManager {
     }
 
     this.backgroundAudio = new Audio(audioSrc);
+    this.backgroundAudio.preload = "auto";
+    this.backgroundAudio.autoplay = true;
     this.backgroundAudio.loop = true;
     this.backgroundAudio.volume = this.backgroundVolume;
 
@@ -28,7 +30,7 @@ class AudioManager {
       });
     }
 
-    return this.backgroundAudio;
+    return playPromise;
   }
 
   // Stop background music
@@ -64,12 +66,17 @@ class AudioManager {
 
     // Lower background music volume when landmark audio plays
     if (this.backgroundAudio) {
+      // Smoothly fade background to 0, then mute to guarantee silence
       this._fadeVolume(
         this.backgroundAudio,
         this.backgroundAudio.volume,
-        this.backgroundVolume * 0.3,
-        600,
-        undefined,
+        0,
+        1200,
+        () => {
+          try {
+            this.backgroundAudio.muted = true;
+          } catch {}
+        },
         "easeInOut"
       );
     }
@@ -81,14 +88,20 @@ class AudioManager {
     // When landmark audio ends, restore background music volume
     this.landmarkAudio.addEventListener("ended", () => {
       if (this.backgroundAudio) {
-        this._fadeVolume(
-          this.backgroundAudio,
-          this.backgroundAudio.volume,
-          this.backgroundVolume,
-          600,
-          undefined,
-          "easeInOut"
-        );
+        // Longer delay before background fades back in (2.5s)
+        setTimeout(() => {
+          try {
+            this.backgroundAudio.muted = false;
+          } catch {}
+          this._fadeVolume(
+            this.backgroundAudio,
+            this.backgroundAudio.volume,
+            this.backgroundVolume,
+            2200,
+            undefined,
+            "easeInOut"
+          );
+        }, 2500);
       }
     });
 
@@ -97,17 +110,8 @@ class AudioManager {
     if (playPromise !== undefined) {
       playPromise.catch((error) => {
         console.log("Landmark audio play failed:", error);
-        // Restore background volume even if landmark audio fails
-        if (this.backgroundAudio) {
-          this._fadeVolume(
-            this.backgroundAudio,
-            this.backgroundAudio.volume,
-            this.backgroundVolume,
-            600,
-            undefined,
-            "easeInOut"
-          );
-        }
+        // Do NOT restore background here; keep it at 0 to avoid audible overlap.
+        // Background will be restored on stopLandmarkAudio or 'ended' handler.
       });
     }
 
@@ -149,14 +153,21 @@ class AudioManager {
 
     // Restore background music volume
     if (this.backgroundAudio) {
-      this._fadeVolume(
-        this.backgroundAudio,
-        this.backgroundAudio.volume,
-        this.backgroundVolume,
-        900,
-        undefined,
-        "easeInOut"
-      );
+      try {
+        this.backgroundAudio.muted = false;
+      } catch {}
+      // Small delay + longer fade for consistency with 'ended' handler
+      setTimeout(() => {
+        // Longer delay before background fades back in (2.5s) for consistency
+        this._fadeVolume(
+          this.backgroundAudio,
+          this.backgroundAudio.volume,
+          this.backgroundVolume,
+          2200,
+          undefined,
+          "easeInOut"
+        );
+      }, 2500);
     }
   }
 

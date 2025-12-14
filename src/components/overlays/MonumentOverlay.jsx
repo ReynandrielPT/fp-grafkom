@@ -20,7 +20,10 @@ function MonumentOverlay({
   const activeAnnotations = landmark?.annotations || [];
   const activeStreetView = landmark?.streetViewUrl;
   const activePreset = landmark?.environmentPreset || "park";
-  const activeAudio = landmark?.audioUri;
+  // Resolve audio path via assets helper to ensure it loads under base path
+  const activeAudio = landmark?.audioUri
+    ? resolveAssetPath(landmark.audioUri)
+    : null;
   const activeScale = landmark?.popupScale || 2;
   const activeObjectPosition = landmark?.objectPosition || [0, 0, 0];
 

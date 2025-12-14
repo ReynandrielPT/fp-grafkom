@@ -29,10 +29,19 @@ function App() {
 
   // Start background music after user interaction
   const startBackgroundMusic = () => {
-    if (audioStarted) {
-      const backgroundMusicPath = resolveAssetPath("music/jazz.mp3");
-      audioManager.playBackgroundMusic(backgroundMusicPath);
-      setAudioStarted(true);
+    if (!audioStarted) {
+      const backgroundMusicPath = resolveAssetPath("music/indo.mp3");
+      const playPromise = audioManager.playBackgroundMusic(backgroundMusicPath);
+      if (playPromise && typeof playPromise.then === "function") {
+        playPromise
+          .then(() => setAudioStarted(true))
+          .catch(() => {
+            // Keep audioStarted false; will retry on user interaction fallback
+          });
+      } else {
+        // If no promise is returned (older browsers), assume started
+        setAudioStarted(true);
+      }
     }
   };
 
@@ -50,6 +59,25 @@ function App() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading]);
+
+  // As a fallback for autoplay policies, start music on first user interaction
+  useEffect(() => {
+    if (audioStarted) return;
+    const handler = () => {
+      startBackgroundMusic();
+      window.removeEventListener("pointerdown", handler, { capture: true });
+    };
+    window.addEventListener("pointerdown", handler, { capture: true });
+    const keyHandler = () => {
+      startBackgroundMusic();
+      window.removeEventListener("keydown", keyHandler, { capture: true });
+    };
+    window.addEventListener("keydown", keyHandler, { capture: true });
+    return () => {
+      window.removeEventListener("pointerdown", handler, { capture: true });
+      window.removeEventListener("keydown", keyHandler, { capture: true });
+    };
+  }, [audioStarted]);
 
   const openGuide = () => {
     localStorage.removeItem("hasSeenGuide");
@@ -71,7 +99,10 @@ function App() {
     if (pendingFly) return;
 
     // If clicking the currently selected landmark (same position), open overlay directly
-    if (lastClickedLandmark?.id === landmark.id && isSamePosition(lastClickedPos, worldPos)) {
+    if (
+      lastClickedLandmark?.id === landmark.id &&
+      isSamePosition(lastClickedPos, worldPos)
+    ) {
       setOverlayLandmark(landmark);
       setOverlayOpen(true);
       return;
@@ -79,7 +110,7 @@ function App() {
 
     // Set hover state for visual feedback
     setHoveredLandmarkId(landmark.id);
-    
+
     // Start animation immediately - don't wait for model to load
     // The animation uses world coordinates, not the 3D model
     setPendingFly({
@@ -171,13 +202,13 @@ function App() {
       />
 
       <button
-        className="fixed right-4 top-4 z-50 w-[7.5rem] bg-teal-primary/30 hover:bg-teal-primary/50 text-cyan-soft border border-teal-light/30 px-4 py-2 rounded-xl backdrop-blur-xl transition-all hover:scale-105 shadow-lg pointer-events-auto"
+        className="fixed right-5 top-5 z-50 w-40 bg-teal-primary/40 hover:bg-teal-primary/60 text-cyan-soft px-5 py-2.5 rounded-2xl backdrop-blur-xl transition-all hover:scale-105 pointer-events-auto ui-contrast-surface ui-readable text-base font-semibold"
         onClick={openGuide}
         aria-label="Tampilkan Panduan"
       >
         <span className="flex items-center justify-center gap-2">
           <svg
-            className="w-4 h-4"
+            className="w-5 h-5"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -196,7 +227,7 @@ function App() {
       {/* Play Game Button - Below Panduan */}
       {!isLoading && (
         <button
-          className="fixed right-4 top-[4.5rem] z-50 w-[7.5rem] bg-gradient-to-r from-teal-primary/50 to-cyan-600/50 hover:from-teal-primary/70 hover:to-cyan-600/70 text-cyan-soft border border-teal-light/30 px-4 py-2 rounded-xl backdrop-blur-xl transition-all hover:scale-105 shadow-lg pointer-events-auto"
+          className="fixed right-5 top-[5.5rem] z-50 w-40 bg-gradient-to-r from-teal-primary/60 to-cyan-600/60 hover:from-teal-primary/70 hover:to-cyan-600/70 text-cyan-soft px-5 py-2.5 rounded-2xl backdrop-blur-xl transition-all hover:scale-105 pointer-events-auto ui-contrast-surface ui-readable text-base font-semibold"
           onClick={() => {
             setCurrentPage("game");
             window.history.pushState({}, "", "/game");
@@ -205,7 +236,7 @@ function App() {
         >
           <span className="flex items-center justify-center gap-2">
             <svg
-              className="w-4 h-4"
+              className="w-5 h-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

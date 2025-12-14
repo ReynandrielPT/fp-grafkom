@@ -20,7 +20,7 @@ export default {
   island: "Jawa",
   environmentPreset: "park",
   streetViewUrl:
-    "https://www.google.com/maps/embed?pb=!4v1716301234567!6m8!1m7!1sCAoSLEFGMVFpcE5xRDZqX0ZqX0ZqX0Zq!2m2!1d-6.935105!2d107.604134!3f120!4f0!5f0.7820865974627469",
+    "https://www.google.com/maps/embed?pb=!4v1765715860211!6m8!1m7!1sCAoSF0NJSE0wb2dLRUlDQWdJRDYyTmJrandF!2m2!1d-6.933849682302988!2d107.6049249940589!3f351.71704487164124!4f13.938193587969764!5f0.7820865974627469",
   description:
     "Monumen yang dibangun di Lapangan Tegallega untuk memperingati peristiwa Bandung Lautan Api, di mana para pejuang membumihanguskan kota Bandung agar tidak dikuasai oleh sekutu.",
   annotations: [
