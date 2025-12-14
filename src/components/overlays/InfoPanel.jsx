@@ -9,11 +9,11 @@ function InfoPanel({
 }) {
   return (
     <div 
-      className={`absolute bottom-6 left-6 z-40 max-w-sm w-full transition-all duration-500 transform ${
+      className={`absolute bottom-6 left-6 z-40 max-w-md w-full transition-all duration-500 transform ${
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"
       }`}
     >
-      <div className="bg-gradient-to-br from-ocean-deep/90 to-ocean-dark/80 backdrop-blur-md border-l-4 border-cyan-soft p-4 rounded-r-xl shadow-2xl text-silver-mist">
+      <div className="bg-gradient-to-br from-ocean-deep/90 to-ocean-dark/80 backdrop-blur-md border-l-4 border-cyan-soft p-6 rounded-r-xl shadow-2xl text-silver-mist">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-xl font-bold text-cyan-soft tracking-tight drop-shadow-md">
             {title}
@@ -25,7 +25,7 @@ function InfoPanel({
           )}
         </div>
         
-        <div className="max-h-[80px] overflow-y-auto pr-2 custom-scrollbar mb-3">
+        <div className="max-h-[120px] overflow-y-auto pr-2 custom-scrollbar mb-3">
           <p className="text-silver-mist/90 text-xs leading-relaxed font-light">
             {description || "Deskripsi tidak tersedia."}
           </p>

@@ -11,8 +11,8 @@ export default {
   name: "Candi Prambanan",
   modelUri: model("candi_prambanan.glb"),
   audioUri: audio("candi_prambanan.mp3"),
-  latitude: -7.852222,
-  longitude: 110.491667,
+  latitude: -7.751754822509548,
+  longitude: 110.49149958161367,
   mapScale: scaled(5.8),
   popupScale: popup(150),
   objectPosition: [0, -0.15, 0],
@@ -41,8 +41,8 @@ export default {
     {
       id: 3,
       position: [0.35, -0.25, 0],
-      title: "Relief",
-      description: "Ukiran cerita Ramayana.",
+      title: "Relief Ramayana & Kresnayana",
+      description: "Panel relief yang membalut pagar langkan bagian dalam candi ini mengisahkan epos Hindu legendaris, yaitu Ramayana (pada Candi Siwa dan Brahma) serta Kresnayana (pada Candi Wisnu). Rangkaian cerita naratif ini dibaca secara pradaksina (berjalan memutar searah jarum jam) dimulai dari gerbang timur Candi Siwa.",
     },
   ],
 };

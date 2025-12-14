@@ -13,7 +13,7 @@ export default {
   audioUri: audio("bandung_lautan_api.mp3"),
   latitude: -6.935105,
   longitude: 107.604134,
-  mapScale: scaled(0.08),
+  mapScale: scaled(0.06),
   popupScale: popup(1),
   objectPosition: [0, -0.15, 0],
   zIndex: 0,
