@@ -73,7 +73,7 @@ export const TRANSPORT = {
 
 // Geographic Coordinate Bounds for Indonesia
 export const COORDINATE_BOUNDS = {
-  LAT_MIN: -12,
+  LAT_MIN: -11,
   LAT_MAX: 6,
   LON_MIN: 95,
   LON_MAX: 141,

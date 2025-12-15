@@ -7,14 +7,14 @@ import {
   useState,
   memo,
 } from "react";
-import { Billboard, Text, useCursor, useGLTF } from "@react-three/drei";
+import { Billboard, Text, useCursor } from "@react-three/drei";
 import gsap from "gsap";
 import { Box3, MathUtils, Vector3, Shape } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { LANDMARK, COORDINATE_BOUNDS } from "../../config/mapConfig";
 import { useFrame } from "@react-three/fiber";
 
-const DISABLE_TEXT_RAYCAST = () => null;
+// const DISABLE_TEXT_RAYCAST = () => null;
 
 const IDLE_ANIMATION = {
   FLOAT_SPEED: 2,
@@ -139,11 +139,6 @@ function LandmarkMarker({
     if (!mapBounds) return null;
     if (landmark.latitude == null || landmark.longitude == null) return null;
 
-    const GLOBAL_X_OFFSET = 0;
-    const GLOBAL_Z_OFFSET = 0.19;
-
-    const LATITUDE_SCALE_FIX = 1.0;
-
     const width = mapBounds.max.x - mapBounds.min.x;
     const depth = mapBounds.max.z - mapBounds.min.z;
     const longitudeRatio =
@@ -156,18 +151,12 @@ function LandmarkMarker({
     const clampedLonRatio = MathUtils.clamp(longitudeRatio, 0, 1);
     const clampedLatRatio = MathUtils.clamp(latitudeRatio, 0, 1);
 
-    const x = mapBounds.min.x + clampedLonRatio * width + GLOBAL_X_OFFSET;
-    const z =
-      mapBounds.max.z - (clampedLatRatio * LATITUDE_SCALE_FIX) * depth + (landmark.zIndex ?? 0) + GLOBAL_Z_OFFSET;;
-    const y =
-      mapBounds.min.y +
-      (mapBounds.max.y - mapBounds.min.y) * 0.01 +
-      LANDMARK.GLOBAL_Y_OFFSET;
+    const x = mapBounds.min.x + clampedLonRatio * width;
+    const z = mapBounds.max.z - clampedLatRatio * depth + (landmark.zIndex ?? 0);
+    const y = mapBounds.min.y + LANDMARK.GLOBAL_Y_OFFSET;
 
     return [x, y, z];
   }, [landmark.latitude, landmark.longitude, landmark.zIndex, mapBounds]);
-
-  const labelY = LANDMARK.LABEL_HEIGHT;
 
   const getMarkerWorldPosition = useCallback(() => {
     if (!markerRef.current) return null;
@@ -478,11 +467,6 @@ function LandmarkMarker({
             
           </group>
         ))}
-
-        {/* <mesh position={[0, 0, 0]}>
-           <circleGeometry args={[0.015, 16]} />
-           <meshBasicMaterial color="white" transparent opacity={0.3} depthWrite={false}/>
-        </mesh> */}
 
       </group>
 
