@@ -60,6 +60,7 @@ function Scene({
   hoveredLandmarkId,
   onLoadingProgress,
   onLandmarkModelReady,
+  lastClickedPos,
 }) {
   const { progress } = useProgress();
   const [mapBounds, setMapBounds] = useState(null);
@@ -117,10 +118,19 @@ function Scene({
     return () => controls.removeEventListener("change", clamp);
   }, [mapBounds]);
 
-  // Initialize camera position at Monas when map loads
+  // Initialize camera position
   useEffect(() => {
+    // If we have a persisted last position passed from parent (App -> IndonesiaCanvas -> Scene),
+    // we use that to initialize the animation start point.
+    if (lastClickedPos && !persistedInitRef.current) {
+      lastPosRef.current = lastClickedPos;
+      persistedInitRef.current = true;
+      return;
+    }
+
     if (!mapBounds || persistedInitRef.current) return;
 
+    // Fallback found Monas if no lastClickedPos
     const monas = activeLandmarks.find(
       (l) =>
         l?.id?.toLowerCase().startsWith("monas") ||
@@ -142,7 +152,7 @@ function Scene({
       lastPosRef.current = position;
       persistedInitRef.current = true;
     }
-  }, [mapBounds, activeLandmarks, lastPosRef, persistedInitRef]);
+  }, [mapBounds, activeLandmarks, lastPosRef, persistedInitRef, lastClickedPos]);
 
   // Handle flight/train animation requests
   useEffect(() => {

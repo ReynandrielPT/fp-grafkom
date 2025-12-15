@@ -36,6 +36,7 @@ function IndonesiaCanvas({
   hoveredLandmarkId,
   onLoadingProgress,
   onLandmarkModelReady,
+  lastClickedPos,
 }) {
   const containerClassName = ["relative", className].filter(Boolean).join(" ");
 
@@ -58,6 +59,7 @@ function IndonesiaCanvas({
           hoveredLandmarkId={hoveredLandmarkId}
           onLoadingProgress={onLoadingProgress}
           onLandmarkModelReady={onLandmarkModelReady}
+          lastClickedPos={lastClickedPos}
         />
       </Canvas>
     </div>
