@@ -393,7 +393,7 @@ function LandmarkMarker({
     pinRef.current.position.y = floatYPin + IDLE_ANIMATION.BASE_HEIGHT;
     groundTargetRef.current.position.y = floatY + IDLE_ANIMATION.BASE_HEIGHT - 0.155;
 
-    const targetRadius = MathUtils.mapLinear(waveValue, 1, -1, 0.04, 0.03);
+    const targetRadius = MathUtils.mapLinear(waveValue, 1, -1, 0.05, 0.045);
 
     const targetOpacity = MathUtils.mapLinear(
       waveValue, 
@@ -451,7 +451,7 @@ function LandmarkMarker({
         rotation={[-Math.PI / 2, 0, 0]} 
         position={[0, -0.06, 0]} // Sedikit di atas tanah
       >
-        {[0, 1, 2].map((i) => (
+        {/* {[0, 1, 2].map((i) => (
           <group key={i} rotation={[0, 0, (i * 2 * Math.PI) / 3]}>
             
             <mesh position={[0, 0.1, 0]} rotation={[0, 0, Math.PI]}>
@@ -466,17 +466,24 @@ function LandmarkMarker({
             </mesh>
             
           </group>
-        ))}
+        ))} */}
+        <mesh ref={groundTargetRef} position={[0, 0, 0]}>
+          <circleGeometry args={[0.01, 32]} />
+          <meshBasicMaterial
+            color="#FF0000"
+            transparent
+            opacity={1}
+            depthTest={false}
+            depthWrite={false}
+          />
+        </mesh>
 
       </group>
 
       {!clonedScene && (
         <group ref={pinRef}>
-          {/* Billboard: Agar lingkaran selalu menghadap user */}
           <Billboard follow={true} lockX={false} lockY={false} lockZ={false}>
-            {/* 1. Lingkaran Hitam Transparan */}
             <mesh position={[0, 0, 0]}>
-              {/* Radius 0.5 (cukup besar), Segments 32 (halus) */}
               <circleGeometry args={[0.05, 32]} />
               <meshBasicMaterial
                 color="#000000"
@@ -488,10 +495,6 @@ function LandmarkMarker({
             </mesh>
 
             <mesh position={[0, 0, 0]} renderOrder={1}>
-              {/* args: [innerRadius, outerRadius, segments]
-                  inner: 0.05 (sama kayak lingkaran hitam)
-                  outer: 0.055 (lebih besar sedikit untuk ketebalan garis)
-               */}
               <ringGeometry args={[0.05, 0.055, 32]} />
               <meshBasicMaterial
                 color="#ffffff"
@@ -499,13 +502,12 @@ function LandmarkMarker({
                 opacity={0.8}
                 depthTest={false}
                 depthWrite={false}
-                side={2} // DoubleSide agar aman
+                side={2} // DoubleSide
               />
             </mesh>
 
-            {/* 2. Teks Angka Putih */}
             <Text
-              position={[0, 0, 0]} // Sedikit di depan lingkaran
+              position={[0, 0, 0]} 
               fontSize={0.05}
               fontWeight="bold"
               color="white"
